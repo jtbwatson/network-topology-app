@@ -1,0 +1,332 @@
+# Campus Network Topology - Complete Connection Data
+# Company naming convention: (type)(site)(number)
+# Interface configurations included
+
+# Device Definitions with Interface Configurations
+scamp1: {
+  label: "scamp1"
+  type: "switch"
+  mgmt_ip: "10.3.1.30"
+  
+  1/0/48: {
+    description: "Core ISL to score2"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "all"
+    status: "up"
+    bandwidth: "10Gbps"
+  }
+  
+  1/0/24: {
+    description: "Distribution Uplink to sdist1"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,10,20,30,100-300"
+    status: "up"
+    bandwidth: "10Gbps"
+  }
+  
+  1/0/46: {
+    description: "Internet Firewall to finet1"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,999"
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+}
+
+scamp2: {
+  label: "scamp2"
+  type: "switch"
+  mgmt_ip: "10.3.1.31"
+  
+  1/0/48: {
+    description: "Core ISL to scamp1"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "all"
+    status: "up"
+    bandwidth: "10Gbps"
+  }
+  
+  1/0/24: {
+    description: "Distribution Uplink to scamp4"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,10,20,30,100-300"
+    status: "up"
+    bandwidth: "10Gbps"
+  }
+  
+  1/0/46: {
+    description: "VPN Firewall to fcamp2"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,888"
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+}
+
+scamp3: {
+  label: "scamp3"
+  type: "switch"
+  mgmt_ip: "10.3.1.35"
+  
+  1/0/48: {
+    description: "Distribution Uplink from scamp1"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,10,20,30,100-300"
+    status: "up"
+    bandwidth: "10Gbps"
+  }
+  
+  1/0/47: {
+    description: "Distribution ISL to scamp4"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,10,20,30,100-300"
+    status: "up"
+    bandwidth: "10Gbps"
+  }
+  
+  1/0/1: {
+    description: "Access Uplink to scamp5"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,10,20,30,100-200"
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+  
+  1/0/2: {
+    description: "Access Uplink to scamp6"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,10,20,30,100-200"
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+}
+
+scamp4: {
+  label: "scamp4"
+  type: "switch"
+  mgmt_ip: "10.3.1.36"
+  
+  1/0/48: {
+    description: "Distribution Uplink from scamp2"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,10,20,30,100-300"
+    status: "up"
+    bandwidth: "10Gbps"
+  }
+  
+  1/0/47: {
+    description: "Distribution ISL to scamp3"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,10,20,30,100-300"
+    status: "up"
+    bandwidth: "10Gbps"
+  }
+  
+  1/0/1: {
+    description: "Access Uplink to scamp7"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,10,20,30,100-200"
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+  
+  1/0/2: {
+    description: "Access Uplink to scamp8"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,10,20,30,100-200"
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+}
+
+scamp5: {
+  label: "scamp5"
+  type: "switch"
+  mgmt_ip: "10.3.1.40"
+  
+  1/0/48: {
+    description: "Access Uplink from scamp3"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,10,20,30,100-200"
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+  
+  1/0/24: {
+    description: "WLC Primary to wcamp1"
+    switchport_mode: "access"
+    access_vlan: 100
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+}
+
+scamp6: {
+  label: "scamp6"
+  type: "switch"
+  mgmt_ip: "10.3.1.41"
+  
+  1/0/48: {
+    description: "Access Uplink from scamp3"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,10,20,30,100-200"
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+  
+  1/0/24: {
+    description: "WLC Secondary to wcamp1"
+    switchport_mode: "access"
+    access_vlan: 100
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+}
+
+scamp7: {
+  label: "scamp7"
+  type: "switch"
+  mgmt_ip: "10.3.1.42"
+  
+  1/0/48: {
+    description: "Access Uplink from scamp4"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,10,20,30,100-200"
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+  
+  1/0/24: {
+    description: "WLC Primary to wcamp2"
+    switchport_mode: "access"
+    access_vlan: 100
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+}
+
+scamp8: {
+  label: "scamp8"
+  type: "switch"
+  mgmt_ip: "10.3.1.43"
+  
+  1/0/48: {
+    description: "Access Uplink from scamp4"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,10,20,30,100-200"
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+  
+  1/0/24: {
+    description: "WLC Secondary to wcamp2"
+    switchport_mode: "access"
+    access_vlan: 100
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+}
+
+wcamp1: {
+  label: "wcamp1"
+  type: "wireless_controller"
+  mgmt_ip: "10.3.1.50"
+  
+  port1: {
+    description: "Primary link to scamp5"
+    status: "up"
+    bandwidth: "1Gbps"
+    vlan: 100
+  }
+  
+  port2: {
+    description: "Secondary link to scamp6"
+    status: "up"
+    bandwidth: "1Gbps"
+    vlan: 100
+  }
+}
+
+wcamp2: {
+  label: "wcamp2"
+  type: "wireless_controller"
+  mgmt_ip: "10.3.1.51"
+  
+  port1: {
+    description: "Primary link to scamp7"
+    status: "up"
+    bandwidth: "1Gbps"
+    vlan: 100
+  }
+  
+  port2: {
+    description: "Secondary link to scamp8"
+    status: "up"
+    bandwidth: "1Gbps"
+    vlan: 100
+  }
+}
+
+fcamp1: {
+  label: "fcamp1"
+  type: "firewall"
+  mgmt_ip: "10.3.1.20"
+  
+  ethernet1/2: {
+    description: "Trust interface to scamp1"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,999"
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+}
+
+fcamp2: {
+  label: "fcamp2"
+  type: "firewall"
+  mgmt_ip: "10.3.1.21"
+  
+  ethernet1/2: {
+    description: "Trust interface to scamp2"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "1,888"
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+}
+
+# Connection Topology - Simple References
+scamp1.1/0/48 -> scamp2.1/0/48
+scamp1.1/0/24 -> scamp3.1/0/48
+scamp2.1/0/24 -> scamp4.1/0/48
+scamp3.1/0/47 -> scamp4.1/0/47
+scamp3.1/0/1 -> scamp5.1/0/48
+scamp3.1/0/2 -> scamp6.1/0/48
+scamp4.1/0/1 -> scamp7.1/0/48
+scamp4.1/0/2 -> scamp8.1/0/48
+scamp5.1/0/24 -> wcamp1.port1
+scamp6.1/0/24 -> wcamp1.port2
+scamp7.1/0/24 -> wcamp2.port1
+scamp8.1/0/24 -> wcamp2.port2
+scamp1.1/0/46 -> fcamp1.ethernet1/2
+scamp2.1/0/46 -> fcamp2.ethernet1/2

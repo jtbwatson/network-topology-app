@@ -1,0 +1,13 @@
+{
+  "name": "network-topology-app",
+  "version": "1.0.0",
+  "description": "Network Topology Visualization application",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "python -m http.server 8000"
+  },
+  "keywords": ["network", "topology", "visualization", "d3", "react"],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Topology Visualization - Modular</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/d3@7"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background-color: #111827;
+            color: #f9fafb;
+        }
+        .loading-spinner { 
+            animation: spin 1s linear infinite; 
+        }
+        @keyframes spin { 
+            from { transform: rotate(0deg); } 
+            to { transform: rotate(360deg); } 
+        }
+        /* Dark scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #374151;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #6b7280;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <!-- Loading fallback -->
+        <div style="display: flex; height: 100vh; align-items: center; justify-content: center; background-color: #111827;">
+            <div style="text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;" class="loading-spinner">⚡</div>
+                <div style="font-size: 1.25rem; color: #f9fafb; margin-bottom: 0.5rem;">Loading Network Topology...</div>
+                <div style="font-size: 0.875rem; color: #9ca3af;">Initializing modular application</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- File System API Mock for local development -->
+    <script>
+        // Mock file system for local development
+        window.fs = {
+            readFile: async (filename, options = {}) => {
+                try {
+                    console.log(`📁 Attempting to load: ${filename}`);
+                    const response = await fetch(`./data/${filename}`);
+                    if (!response.ok) {
+                        throw new Error(`Failed to load ${filename}: ${response.status} ${response.statusText}`);
+                    }
+                    console.log(`✅ Successfully loaded: ${filename}`);
+                    if (options.encoding === 'utf8') {
+                        return await response.text();
+                    }
+                    return new Uint8Array(await response.arrayBuffer());
+                } catch (error) {
+                    console.error(`❌ Error loading ${filename}:`, error);
+                    throw error;
+                }
+            }
+        };
+
+        // Log when page loads
+        console.log('🚀 Network Topology App Starting (Modular Fixed Version)...');
+        console.log('📂 Expected data files:');
+        console.log('   • data/branch.d2');
+        console.log('   • data/campus.d2');
+        console.log('   • data/datacenter.d2');
+        console.log('🧩 Using pseudo-modular architecture with global functions');
+    </script>
+
+    <!-- Load utilities first -->
+    <script type="text/babel" src="./src/utils/d2Parser.js"></script>
+    <script type="text/babel" src="./src/utils/deviceUtils.js"></script>
+    <script type="text/babel" src="./src/utils/layoutUtils.js"></script>
+    
+    <!-- Load hooks -->
+    <script type="text/babel" src="./src/hooks/useNetworkData.js"></script>
+    <script type="text/babel" src="./src/hooks/useVisualization.js"></script>
+    
+    <!-- Load components -->
+    <script type="text/babel" src="./src/components/DeviceDetailsPanel.js"></script>
+    <script type="text/babel" src="./src/components/Layer3Panel.js"></script>
+    <script type="text/babel" src="./src/components/ConnectionDetailsPanel.js"></script>
+    <script type="text/babel" src="./src/components/Modals.js"></script>
+    
+    <!-- Main App -->
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const NetworkTopologyApp = () => {
+          const [selectedTopology, setSelectedTopology] = useState("branch");
+          const [selectedDevice, setSelectedDevice] = useState(null);
+          const [selectedConnection, setSelectedConnection] = useState(null);
+          const [showAPModal, setShowAPModal] = useState(false);
+          const [showRoutingTableModal, setShowRoutingTableModal] = useState(false);
+          const [pathTracing, setPathTracing] = useState({
+            active: false,
+            source: null,
+            target: null,
+          });
+
+          // Store interfaces data for connection details
+          const [interfacesData, setInterfacesData] = useState(new Map());
+
+          const svgRef = useRef(null);
+
+          // Custom hooks for data and visualization
+          const { networkData, loading, error } = window.useNetworkData();
+          const { simulationRef } = window.useVisualization({
+            svgRef,
+            networkData,
+            selectedTopology,
+            setInterfacesData,
+            setSelectedDevice,
+            setSelectedConnection,
+            setShowAPModal,
+            setShowRoutingTableModal
+          });
+
+          // Get current topology data
+          const getCurrentTopology = () => {
+            return networkData?.sites[selectedTopology];
+          };
+
+          // Handle topology change
+          const handleTopologyChange = (topology) => {
+            setSelectedTopology(topology);
+            setSelectedDevice(null);
+            setSelectedConnection(null);
+            setShowAPModal(false);
+            setShowRoutingTableModal(false);
+            setPathTracing({ active: false, source: null, target: null });
+          };
+
+          // Render details panel - shows either device or connection details
+          const renderDetailsPanel = () => {
+            // Show connection details if a connection is selected
+            if (selectedConnection) {
+              return (
+                <window.ConnectionDetailsPanel
+                  selectedConnection={selectedConnection}
+                  interfacesData={interfacesData}
+                  setSelectedConnection={setSelectedConnection}
+                  setSelectedDevice={setSelectedDevice}
+                />
+              );
+            }
+            
+            // Show device details if a device is selected
+            if (selectedDevice) {
+              return (
+                <window.DeviceDetailsPanel
+                  selectedDevice={selectedDevice}
+                  interfacesData={interfacesData}
+                />
+              );
+            }
+            
+            // Default empty state
+            return (
+              <div className="text-center text-gray-400 mt-8">
+                <div className="text-4xl mb-4">🖱️</div>
+                <p className="text-base">Click on a device to view details</p>
+                <p className="text-sm mt-2">
+                  or click on a connection to see link information
+                </p>
+              </div>
+            );
+          };
+
+          // Show loading state
+          if (loading) {
+            return (
+              <div className="flex h-screen bg-gray-900 items-center justify-center">
+                <div className="text-center">
+                  <div className="text-4xl mb-4 loading-spinner">⚡</div>
+                  <div className="text-xl text-gray-100 mb-2">
+                    Loading Network Data...
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    Reading topology files and device information
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (error) {
+            return (
+              <div className="flex h-screen bg-gray-900 items-center justify-center">
+                <div className="text-center max-w-md mx-4">
+                  <div className="text-4xl mb-4">❌</div>
+                  <div className="text-xl text-gray-100 mb-2">
+                    Failed to Load Network Data
+                  </div>
+                  <div className="text-sm text-gray-400 mb-4 p-4 bg-gray-800 rounded-lg border border-gray-700">
+                    {error.message}
+                  </div>
+                  <div className="text-xs text-gray-500 mb-4">
+                    Expected files in data/ directory:
+                    <br />
+                    • branch.d2
+                    <br />
+                    • campus.d2
+                    <br />• datacenter.d2
+                  </div>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          if (!networkData) {
+            return (
+              <div className="flex h-screen bg-gray-900 items-center justify-center">
+                <div className="text-center">
+                  <div className="text-4xl mb-4">📁</div>
+                  <div className="text-xl text-gray-100 mb-2">
+                    No Network Data Available
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    Please ensure data files are accessible
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="flex h-screen bg-gray-900">
+              <div className="w-80 bg-gray-800 shadow-lg flex flex-col border-r border-gray-700">
+                <div className="p-4 border-b border-gray-700">
+                  <h1 className="text-xl font-bold text-gray-100">Network Topology</h1>
+                  <select
+                    value={selectedTopology}
+                    onChange={(e) => handleTopologyChange(e.target.value)}
+                    className="mt-3 w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 font-medium"
+                  >
+                    {Object.entries(networkData.sites).map(([key, site]) => (
+                      <option key={key} value={key} className="bg-gray-700">
+                        {site.site_info.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="mt-4 text-sm text-gray-300 space-y-1">
+                    <div>📍 {getCurrentTopology()?.site_info.location}</div>
+                    <div>
+                      🔧 {getCurrentTopology()?.site_info.devices_count} devices
+                    </div>
+                    <div>
+                      📡 {getCurrentTopology()?.site_info.aps_count} access points
+                    </div>
+                    {getCurrentTopology()?.site_info.device_types && (
+                      <div className="mt-1">
+                        🏷️ Types: {getCurrentTopology().site_info.device_types.join(", ")}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto bg-gray-800">
+                  {renderDetailsPanel()}
+                </div>
+
+                <div className="p-4 border-t border-gray-700 bg-gray-800">
+                  <h4 className="font-medium mb-2 text-gray-100">Path Tracing</h4>
+                  <button
+                    className="w-full p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors"
+                    onClick={() => alert("Path tracing functionality coming soon!")}
+                  >
+                    Enable Path Tracing Mode
+                  </button>
+                </div>
+              </div>
+
+              <div className={`flex-1 relative ${selectedDevice ? 'mr-80' : ''}`}>
+                <svg ref={svgRef} className="w-full h-full bg-gray-900"></svg>
+
+                <div className="absolute top-4 right-4 bg-gray-800 border border-gray-700 p-4 rounded-lg shadow-md">
+                  <h4 className="font-medium mb-3 text-gray-100">Network Overview</h4>
+                  <div className="text-sm space-y-1 text-gray-300">
+                    <div>Site: {getCurrentTopology()?.site_info.name}</div>
+                    <div>Devices: {getCurrentTopology()?.site_info.devices_count}</div>
+                    <div>
+                      Access Points: {getCurrentTopology()?.site_info.aps_count}
+                    </div>
+                    <div>Location: {getCurrentTopology()?.site_info.location}</div>
+                  </div>
+                </div>
+
+                <div className="absolute top-4 left-4 bg-gray-800 border border-gray-700 p-4 rounded-lg shadow-md">
+                  <div className="text-xs text-gray-300 space-y-2">
+                    <div>🖱️ Click & drag to move devices</div>
+                    <div>🔍 Scroll to zoom</div>
+                    <div>📱 Click devices for details</div>
+
+                    <div className="pt-2 border-t border-gray-600 space-y-2">
+                      <div className="text-xs text-gray-400 font-medium">
+                        Layout Controls:
+                      </div>
+                      <button
+                        onClick={() => window.resetLayout(simulationRef)}
+                        className="w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
+                      >
+                        🔄 Reset Layout
+                      </button>
+                      <button
+                        onClick={() => window.autoArrangeLayout(simulationRef, svgRef)}
+                        className="w-full p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium transition-colors"
+                      >
+                        📐 Auto Arrange
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="absolute bottom-4 left-4 bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-md">
+                  <div className="text-xs text-gray-400">
+                    📊 Data loaded from D2 files (Modular Fixed)
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Panel - Layer 3 Information */}
+              {selectedDevice && (
+                <div className="fixed top-0 right-0 h-screen">
+                  <window.Layer3Panel
+                    selectedDevice={selectedDevice}
+                    interfacesData={interfacesData}
+                    setShowRoutingTableModal={setShowRoutingTableModal}
+                  />
+                </div>
+              )}
+
+              {/* Access Points Modal */}
+              <window.AccessPointsModal
+                showAPModal={showAPModal}
+                setShowAPModal={setShowAPModal}
+                getCurrentTopology={getCurrentTopology}
+              />
+
+              {/* Routing Table Modal */}
+              <window.RoutingTableModal
+                showRoutingTableModal={showRoutingTableModal}
+                setShowRoutingTableModal={setShowRoutingTableModal}
+                selectedDevice={selectedDevice}
+                interfacesData={interfacesData}
+              />
+            </div>
+          );
+        };
+        
+        // Initialize React app
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot ? ReactDOM.createRoot(container) : container;
+        
+        if (ReactDOM.createRoot) {
+            root.render(<NetworkTopologyApp />);
+        } else {
+            ReactDOM.render(<NetworkTopologyApp />, root);
+        }
+        
+        console.log('✅ React app initialized (Modular Fixed Version)');
+    </script>
+</body>
+</html>
