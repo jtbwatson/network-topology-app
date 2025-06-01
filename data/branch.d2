@@ -3,6 +3,36 @@
 # Interface configurations and routing information included
 
 # Device Definitions with Interface Configurations and Routing
+
+# External/WAN Connections
+isp_provider: {
+  label: "ISP Provider"
+  type: "wan_provider"
+  mgmt_ip: "10.2.1.1"
+  
+  # Provider Information
+  provider_name: "MegaCorp ISP"
+  circuit_id: "MPLS-12345"
+  bandwidth: "100Mbps"
+  circuit_type: "MPLS"
+  sla_class: "Business"
+  
+  WAN1: {
+    description: "Primary WAN Circuit"
+    status: "up"
+    bandwidth: "50Mbps"
+    ip_address: "10.2.1.1"
+    subnet_mask: "255.255.255.248"
+  }
+  
+  WAN2: {
+    description: "Secondary WAN Circuit"
+    status: "up"
+    bandwidth: "50Mbps"
+    ip_address: "10.2.1.9"
+    subnet_mask: "255.255.255.248"
+  }
+}
 rbranch1: {
   label: "rbranch1"
   type: "router"
@@ -23,6 +53,20 @@ rbranch1: {
   
   # Static Routes
   static_routes: "0.0.0.0/0 via 10.2.1.1, 192.168.100.0/24 via 10.2.1.11"
+  
+  GigabitEthernet0/0/0: {
+    description: "WAN Link to ISP Provider"
+    switchport_mode: "routed"
+    native_vlan:
+    allowed_vlans:
+    status: "up"
+    bandwidth: "50Mbps"
+    ip_address: "10.2.1.2"
+    subnet_mask: "255.255.255.248"
+    ospf_area: "0"
+    ospf_cost: "100"
+    ospf_network_type: "point-to-point"
+  }
   
   GigabitEthernet0/0/1: {
     description: "Link to rbranch2"
@@ -72,6 +116,20 @@ rbranch2: {
   
   # Static Routes
   static_routes: "0.0.0.0/0 via 10.2.1.1, 192.168.200.0/24 via 10.2.1.10"
+  
+  GigabitEthernet0/0/0: {
+    description: "WAN Link to ISP Provider"
+    switchport_mode: "routed"
+    native_vlan:
+    allowed_vlans:
+    status: "up"
+    bandwidth: "50Mbps"
+    ip_address: "10.2.1.10"
+    subnet_mask: "255.255.255.248"
+    ospf_area: "0"
+    ospf_cost: "100"
+    ospf_network_type: "point-to-point"
+  }
   
   GigabitEthernet0/0/1: {
     description: "Link to rbranch1"
@@ -316,6 +374,12 @@ routing_table: {
 }
 
 # Connection Topology - Simple References
+
+# WAN Connections
+rbranch1.GigabitEthernet0/0/0 -> isp_provider.WAN1
+rbranch2.GigabitEthernet0/0/0 -> isp_provider.WAN2
+
+# Internal Connections
 rbranch1.GigabitEthernet0/0/1 -> rbranch2.GigabitEthernet0/0/1
 rbranch1.GigabitEthernet0/0/2 -> sbranch1.1/0/1
 rbranch2.GigabitEthernet0/0/2 -> sbranch1.1/0/2

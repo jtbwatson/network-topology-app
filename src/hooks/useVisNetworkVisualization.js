@@ -70,6 +70,22 @@ window.useVisNetworkVisualization = ({
             hover: '#9CA3AF'
           },
           width: 3,
+          chosen: {
+            edge: function(values, id, selected, hovering) {
+              if (selected) {
+                values.color = '#10B981';
+                values.width = 5;
+                values.shadow = true;
+                values.shadowColor = '#10B981';
+                values.shadowSize = 8;
+                values.shadowX = 0;
+                values.shadowY = 0;
+              }
+            }
+          },
+          shadow: {
+            enabled: false
+          },
           // Don't set global smooth - let individual edges control their own smoothing
           arrows: {
             to: {
@@ -216,7 +232,9 @@ window.convertToVisNetwork = (graphData) => {
     
     nodes.add({
       id: node.id,
-      label: `${deviceIcon}\n${node.label || node.id}`,
+      label: node.label || node.id,
+      image: deviceIcon,
+      shape: 'circularImage',
       color: {
         background: deviceColor,
         border: deviceColor === '#DC2626' ? '#B91C1C' : 
@@ -228,10 +246,33 @@ window.convertToVisNetwork = (graphData) => {
           border: '#10B981'
         }
       },
-      size: node.type === 'router' || node.type === 'wireless_controller' ? 50 : 
-            node.type === 'switch' || node.type === 'firewall' ? 45 : 40,
+      shadow: {
+        enabled: false
+      },
+      chosen: {
+        node: function(values, id, selected, hovering) {
+          if (selected) {
+            values.shadow = true;
+            values.shadowColor = '#10B981';
+            values.shadowSize = 20;
+            values.shadowX = 0;
+            values.shadowY = 0;
+            values.borderWidth = 4;
+            values.borderColor = '#10B981';
+          }
+        }
+      },
+      shapeProperties: {
+        borderDashes: false,
+        borderRadius: 15,
+        interpolation: true,
+        useImageSize: false,
+        useBorderWithImage: true,
+        imagePadding: 10
+      },
+      size: 50,
       font: {
-        size: node.type === 'router' || node.type === 'wireless_controller' ? 16 : 14,
+        size: 14,
         color: '#FFFFFF',
         face: 'Arial',
         strokeWidth: 2,

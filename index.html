@@ -8,6 +8,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { 
@@ -40,6 +41,18 @@
         }
         
         /* Basic styling - animations removed for stability */
+        
+        /* Selection glow animation for network nodes */
+        .vis-network .vis-navigation {
+            position: absolute;
+        }
+        
+        /* Add CSS animation for selected nodes */
+        @keyframes nodeGlow {
+            0% { filter: drop-shadow(0 0 8px #10B981); }
+            50% { filter: drop-shadow(0 0 16px #10B981); }
+            100% { filter: drop-shadow(0 0 8px #10B981); }
+        }
     </style>
 </head>
 <body>

@@ -10,33 +10,50 @@ window.getTypeFromLabel = (label) => {
     return "wireless_controller";
   if (lower.includes("access point") || lower.includes("ap"))
     return "access_point";
+  if (lower.includes("isp") || lower.includes("wan") || lower.includes("provider"))
+    return "wan_provider";
+  if (lower.includes("internet") || lower.includes("inet"))
+    return "internet";
+  if (lower.includes("mpls") || lower.includes("private"))
+    return "mpls";
+  if (lower.includes("external") || lower.includes("cloud"))
+    return "external";
   return "unknown";
 };
 
-// Get device icon based on type
+// Get device icon based on type - returns path to SVG file
 window.getDeviceIcon = (type) => {
-  const icons = {
-    router: "🌐",
-    switch: "⚡",
-    firewall: "🛡️",
-    wireless_controller: "📶",
-    access_point: "📡",
-    server: "🖥️",
-    unknown: "❓",
+  const iconMap = {
+    router: 'assets/icons/router.svg',
+    switch: 'assets/icons/switch.svg', 
+    firewall: 'assets/icons/firewall.svg',
+    wireless_controller: 'assets/icons/wifi.svg',
+    access_point: 'assets/icons/wifi.svg',
+    server: 'assets/icons/router.svg',
+    external: 'assets/icons/cloud.svg',
+    wan_provider: 'assets/icons/cloud.svg',
+    internet: 'assets/icons/cloud.svg',
+    mpls: 'assets/icons/cloud.svg',
+    unknown: 'assets/icons/router.svg',
   };
-  return icons[type] || icons.unknown;
+  
+  return iconMap[type] || iconMap.unknown;
 };
 
 // Get device color based on type
 window.getDeviceColor = (type) => {
   const colors = {
-    router: "#E74C3C",
-    switch: "#3498DB",
-    firewall: "#E67E22",
-    wireless_controller: "#9B59B6",
-    access_point: "#1ABC9C",
-    server: "#2ECC71",
-    unknown: "#95A5A6",
+    router: "#0EA5E9",
+    switch: "#22C55E",
+    firewall: "#F97316",
+    wireless_controller: "#8B5CF6",
+    access_point: "#14B8A6",
+    server: "#16A34A",
+    external: "#9CA3AF",
+    wan_provider: "#9CA3AF",
+    internet: "#3B82F6",
+    mpls: "#6B7280",
+    unknown: "#6B7280",
   };
   return colors[type] || colors.unknown;
 };

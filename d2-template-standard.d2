@@ -633,6 +633,175 @@ wireless_controller_device_name: {
 }
 
 # ============================================================================
+# EXTERNAL/WAN CONNECTION DEVICE TEMPLATES
+# ============================================================================
+
+# ISP/WAN PROVIDER TEMPLATE
+wan_provider_device_name: {
+  # REQUIRED BASIC PROPERTIES
+  label: "ISP Provider Name"
+  type: "wan_provider"
+  mgmt_ip: "provider_gateway_ip"
+  
+  # PROVIDER INFORMATION
+  provider_name: "Provider Company Name"
+  circuit_id: "Circuit Identifier"
+  bandwidth: "Total Bandwidth"
+  circuit_type: "MPLS|Internet|Dedicated|Metro-E|Fiber|Cable"
+  sla_class: "Business|Premium|Standard|Basic"
+  contract_number: "Contract Reference"
+  support_contact: "24x7 Support Number"
+  account_manager: "Account Manager Name"
+  
+  # SERVICE LEVEL DETAILS
+  committed_rate: "CIR in Mbps"
+  burst_rate: "PIR in Mbps"
+  latency_sla: "Round-trip latency in ms"
+  availability_sla: "Uptime percentage"
+  packet_loss_sla: "Maximum packet loss percentage"
+  
+  # PRIMARY CIRCUIT
+  WAN1: {
+    description: "Primary WAN Circuit"
+    status: "up|down|maintenance"
+    bandwidth: "Circuit Bandwidth"
+    ip_address: "Provider Gateway IP"
+    subnet_mask: "Subnet Mask"
+    circuit_type: "Primary|Backup"
+    vlan_id: "Provider VLAN"
+    encapsulation: "dot1q|untagged"
+  }
+  
+  # SECONDARY CIRCUIT (if applicable)
+  WAN2: {
+    description: "Secondary WAN Circuit"
+    status: "up|down|maintenance"
+    bandwidth: "Circuit Bandwidth"
+    ip_address: "Provider Gateway IP"
+    subnet_mask: "Subnet Mask"
+    circuit_type: "Primary|Backup"
+    vlan_id: "Provider VLAN"
+    encapsulation: "dot1q|untagged"
+  }
+}
+
+# INTERNET CONNECTION TEMPLATE
+internet_connection_device_name: {
+  # REQUIRED BASIC PROPERTIES
+  label: "Internet Connection"
+  type: "internet"
+  mgmt_ip: "0.0.0.0"
+  
+  # INTERNET SERVICE DETAILS
+  provider_name: "Internet Service Provider"
+  service_type: "Broadband|Fiber|Cable|DSL|Satellite"
+  bandwidth_down: "Download Speed"
+  bandwidth_up: "Upload Speed"
+  static_ips: "Number of Static IPs"
+  dynamic_dns: "enabled|disabled"
+  
+  # SERVICE CHARACTERISTICS
+  latency_typical: "Typical latency in ms"
+  data_cap: "Monthly data limit or unlimited"
+  burst_allowance: "Burst capability"
+  
+  Internet: {
+    description: "Internet Gateway"
+    status: "up|down"
+    bandwidth: "Total Bandwidth"
+    ip_address: "0.0.0.0"
+    subnet_mask: "0.0.0.0"
+    default_route: "true"
+  }
+}
+
+# MPLS PRIVATE NETWORK TEMPLATE
+mpls_network_device_name: {
+  # REQUIRED BASIC PROPERTIES
+  label: "MPLS Provider"
+  type: "mpls"
+  mgmt_ip: "mpls_gateway_ip"
+  
+  # MPLS SERVICE INFORMATION
+  provider_name: "MPLS Service Provider"
+  vpn_id: "Customer VPN ID"
+  service_class: "Class of Service"
+  bandwidth: "Committed Information Rate"
+  vpn_type: "Layer3|Layer2|VPLS"
+  
+  # MPLS VPN DETAILS
+  customer_asn: "Customer AS Number"
+  provider_asn: "Provider AS Number"
+  route_distinguisher: "RD Value"
+  import_rt: "Import Route Targets"
+  export_rt: "Export Route Targets"
+  
+  PE_Router: {
+    description: "Provider Edge Router"
+    status: "up|down"
+    bandwidth: "Interface Speed"
+    ip_address: "PE Router IP"
+    subnet_mask: "Subnet Mask"
+    bgp_as: "Provider AS Number"
+    vrf_name: "Customer VRF Name"
+  }
+}
+
+# CLOUD CONNECTION TEMPLATE  
+cloud_connection_device_name: {
+  # REQUIRED BASIC PROPERTIES
+  label: "Cloud Provider"
+  type: "external"
+  mgmt_ip: "cloud_gateway_ip"
+  
+  # CLOUD SERVICE DETAILS
+  provider_name: "AWS|Azure|GCP|Oracle|IBM"
+  connection_type: "Direct Connect|ExpressRoute|Interconnect|FastConnect"
+  bandwidth: "Connection Bandwidth"
+  region: "Cloud Region"
+  availability_zone: "AZ or Zone"
+  
+  # CLOUD-SPECIFIC DETAILS
+  virtual_circuit_id: "VC or Connection ID"
+  bgp_asn: "Cloud Provider ASN"
+  customer_asn: "Customer ASN"
+  vlan_id: "Cloud VLAN"
+  
+  Cloud_Gateway: {
+    description: "Cloud Gateway Interface"
+    status: "up|down"
+    bandwidth: "Interface Speed"
+    ip_address: "Cloud Gateway IP"
+    subnet_mask: "Subnet Mask"
+    vlan_id: "Cloud VLAN"
+    bgp_neighbor: "BGP Peer IP"
+  }
+}
+
+# EXTERNAL NETWORK TEMPLATE (Generic)
+external_network_device_name: {
+  # REQUIRED BASIC PROPERTIES
+  label: "External Network"
+  type: "external"
+  mgmt_ip: "external_gateway_ip"
+  
+  # EXTERNAL NETWORK DETAILS
+  network_name: "External Network Name"
+  network_type: "Partner|Vendor|Branch|Remote Site"
+  connection_method: "VPN|Leased Line|Internet|Wireless"
+  administrator: "Network Administrator Contact"
+  
+  External_Interface: {
+    description: "External Network Interface"
+    status: "up|down"
+    bandwidth: "Interface Speed"
+    ip_address: "External Gateway IP"
+    subnet_mask: "Subnet Mask"
+    connection_type: "Static|Dynamic|VPN Tunnel"
+  }
+}
+
+# ============================================================================
 # ACCESS POINT DEVICE TEMPLATE
 # ============================================================================
 access_point_device_name: {
@@ -744,10 +913,19 @@ vrf_database: {
 # source_device.source_interface -> target_device.target_interface
 
 # Examples:
+# Internal connections:
 # router1.GigabitEthernet0/0/1 -> switch1.1/0/24
 # switch1.1/0/48 -> switch2.1/0/48
 # firewall1.ethernet1/2 -> switch1.1/0/46
 # switch1.1/0/12 -> wireless_controller1.port1
+#
+# External/WAN connections:
+# router1.GigabitEthernet0/0/0 -> wan_provider.WAN1
+# router2.GigabitEthernet0/0/0 -> wan_provider.WAN2
+# firewall1.ethernet1/1 -> internet_connection.Internet
+# router1.GigabitEthernet0/0/2 -> mpls_network.PE_Router
+# router1.GigabitEthernet0/0/3 -> cloud_connection.Cloud_Gateway
+# branch_router.Serial0/0/0 -> external_network.External_Interface
 
 # ============================================================================
 # PROGRAMMATIC POPULATION NOTES
