@@ -7,7 +7,7 @@
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/d3@7"></script>
+    <script src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { 
@@ -91,7 +91,7 @@
     
     <!-- Load hooks -->
     <script type="text/babel" src="./src/hooks/useNetworkData.js"></script>
-    <script type="text/babel" src="./src/hooks/useVisualization.js"></script>
+    <script type="text/babel" src="./src/hooks/useVisNetworkVisualization.js"></script>
     
     <!-- Load components -->
     <script type="text/babel" src="./src/components/DeviceDetailsPanel.js"></script>
@@ -118,12 +118,12 @@
           // Store interfaces data for connection details
           const [interfacesData, setInterfacesData] = useState(new Map());
 
-          const svgRef = useRef(null);
+          const containerRef = useRef(null);
 
           // Custom hooks for data and visualization
           const { networkData, loading, error } = window.useNetworkData();
-          const { simulationRef } = window.useVisualization({
-            svgRef,
+          const { visNetworkRef } = window.useVisNetworkVisualization({
+            containerRef,
             networkData,
             selectedTopology,
             setInterfacesData,
@@ -296,7 +296,7 @@
               </div>
 
               <div className={`flex-1 relative ${selectedDevice ? 'mr-80' : ''}`}>
-                <svg ref={svgRef} className="w-full h-full bg-gray-900"></svg>
+                <div ref={containerRef} className="w-full h-full bg-gray-900"></div>
 
                 <div className="absolute top-4 right-4 bg-gray-800 border border-gray-700 p-4 rounded-lg shadow-md">
                   <h4 className="font-medium mb-3 text-gray-100">Network Overview</h4>
@@ -321,16 +321,22 @@
                         Layout Controls:
                       </div>
                       <button
-                        onClick={() => window.resetLayout(simulationRef)}
+                        onClick={() => window.resetVisLayout(visNetworkRef)}
                         className="w-full p-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
                       >
                         🔄 Reset Layout
                       </button>
                       <button
-                        onClick={() => window.autoArrangeLayout(simulationRef, svgRef)}
+                        onClick={() => window.autoArrangeVisLayout(visNetworkRef)}
                         className="w-full p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium transition-colors"
                       >
-                        📐 Auto Arrange
+                        📐 Hierarchical Layout
+                      </button>
+                      <button
+                        onClick={() => window.enableVisGridSnap(visNetworkRef, 50)}
+                        className="w-full p-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-medium transition-colors"
+                      >
+                        📏 Enable Grid Snap
                       </button>
                     </div>
                   </div>
@@ -338,7 +344,7 @@
 
                 <div className="absolute bottom-4 left-4 bg-gray-800 border border-gray-700 p-3 rounded-lg shadow-md">
                   <div className="text-xs text-gray-400">
-                    📊 Data loaded from D2 files (Modular Fixed)
+                    📊 vis.js Network visualization (Stable & Reliable)
                   </div>
                 </div>
               </div>
