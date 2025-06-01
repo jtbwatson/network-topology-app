@@ -1,0 +1,446 @@
+# ============================================================================
+# SWITCH DEVICE TEMPLATE - STANDARDIZED D2 FORMAT
+# ============================================================================
+# This template defines the complete data structure for switch devices
+# Supports: Cisco IOS/IOS-XE, Cisco NX-OS, Aruba AOS, Aruba AOS-CX, Arista EOS
+
+# SWITCH DEVICE TEMPLATE  
+switch_device_name: {
+  # REQUIRED BASIC PROPERTIES
+  label: "display_name"
+  type: "switch"
+  mgmt_ip: "x.x.x.x"
+  
+  # OPTIONAL DEVICE METADATA
+  hostname: "device_hostname"
+  model: "device_model"
+  serial_number: "serial_number"
+  firmware_version: "ios_version"
+  uptime: "uptime_string"
+  location: "physical_location"
+  
+  # PERFORMANCE METRICS
+  cpu_usage: "percentage"
+  memory_usage: "percentage"
+  temperature: "celsius"
+  poe_usage: "watts_used/watts_available"
+  
+  # LAYER 3 SWITCHING CAPABILITIES
+  ip_routing_enabled: "true|false"
+  routing_table_count: "route_count"
+  
+  # VRF (Virtual Routing and Forwarding) CONFIGURATION
+  vrf_enabled: "true|false"
+  vrf_count: "vrf_count"
+  vrf_list: "vrf1,vrf2,vrf3"
+  
+  # CISCO NEXUS VDC (Virtual Device Context)
+  vdc_enabled: "true|false"
+  vdc_count: "vdc_count"
+  vdc_list: "vdc1,vdc2,vdc3"
+  
+  # ROUTING PROTOCOL CONFIGURATION (for L3 switches)
+  ospf_enabled: "true|false"
+  ospf_process_id: "process_id"
+  ospf_areas: "comma_separated_areas"
+  ospf_router_id: "router_id_ip"
+  
+  # DHCP SERVICES
+  dhcp_relay_enabled: "true|false"
+  dhcp_pools: "pool1,pool2,pool3"
+  dhcp_leases_active: "lease_count"
+  
+  # HIGH AVAILABILITY
+  vrrp_groups: "number_of_groups"
+  
+  # VENDOR-SPECIFIC HIGH AVAILABILITY
+  # Cisco: VSS, VPC, StackWise
+  vsx_role: "primary|secondary|standalone"
+  vsx_status: "up|down|split"
+  vpc_role: "primary|secondary|none"
+  vpc_peer_status: "up|down"
+  
+  # Aruba AOS-CX: VSX
+  vsx_enabled: "true|false"
+  vsx_peer_ip: "peer_mgmt_ip"
+  vsx_keepalive_status: "up|down"
+  vsx_isl_status: "up|down"
+  
+  # Arista EOS: MLAG
+  mlag_enabled: "true|false"
+  mlag_domain_id: "domain_id"
+  mlag_role: "primary|secondary"
+  mlag_peer_ip: "peer_ip"
+  mlag_peer_link: "interface_name"
+  mlag_state: "active|inactive|disabled"
+  
+  # Virtual ARP (Arista)
+  varp_enabled: "true|false"
+  varp_mac: "virtual_mac_address"
+  
+  # STACKING INFORMATION
+  stack_role: "master|member|standalone"
+  stack_priority: "priority_value"
+  stack_members: "member_count"
+  
+  # SVI CONFIGURATIONS (Layer 3 VLAN interfaces)
+  svi_vlan_name: {
+    vlan_id: "vlan_number"
+    ip_address: "svi_ip"
+    subnet_mask: "subnet_mask"
+    status: "up|down"
+    description: "vlan_description"
+    helper_address: "dhcp_helper_ip"
+    
+    # VRF ASSIGNMENT
+    vrf: "vrf_name"
+    vrf_forwarding: "vrf_instance_name"
+    
+    # ROUTING PROTOCOL SVI SETTINGS
+    ospf_area: "area_number"
+    ospf_cost: "cost_value"
+    
+    # SVI HIGH AVAILABILITY
+    vrrp_group: "group_number"
+    vrrp_priority: "priority_value"
+    vrrp_virtual_ip: "virtual_ip"
+    
+    # VLAN STATISTICS
+    clients_connected: "client_count"
+    traffic_in: "bytes"
+    traffic_out: "bytes"
+  }
+  
+  # PORT-CHANNEL LOGICAL INTERFACES (Link Aggregation Groups)
+  port_channel_name: {
+    # REQUIRED PORT-CHANNEL PROPERTIES
+    description: "port_channel_description"
+    status: "up|down|admin-down"
+    channel_group: "channel_group_number"
+    
+    # AGGREGATION PROTOCOL
+    protocol: "lacp|pagp|static"
+    
+    # VENDOR-SPECIFIC LAG PROPERTIES
+    # Cisco: EtherChannel/Port-Channel
+    lacp_mode: "active|passive"
+    lacp_timeout: "fast|slow"
+    lacp_priority: "priority_value"
+    lacp_key: "key_value"
+    pagp_mode: "auto|desirable"
+    
+    # Aruba AOS: Trunk
+    trunk_type: "lacp|static"
+    lacp_activity: "active|passive"
+    
+    # Aruba AOS-CX: LAG
+    lag_type: "dynamic|static"
+    lag_mode: "active|passive"
+    lag_hash: "l2|l3|l4"
+    
+    # Arista EOS: Port-Channel
+    mlag_id: "mlag_id_number"
+    
+    # MEMBER INTERFACE LIST
+    member_interfaces: "interface1,interface2,interface3"
+    active_members: "active_count"
+    standby_members: "standby_count"
+    
+    # LAYER 2 SWITCHPORT CONFIGURATION (inherited by members)
+    switchport_mode: "access|trunk|dynamic"
+    access_vlan: "vlan_number"
+    native_vlan: "vlan_number"
+    allowed_vlans: "vlan_list_or_all"
+    voice_vlan: "vlan_number"
+    
+    # LAYER 3 PROPERTIES (for routed port-channels)
+    ip_address: "port_channel_ip"
+    subnet_mask: "subnet_mask"
+    
+    # VRF ASSIGNMENT
+    vrf: "vrf_name"
+    vrf_forwarding: "vrf_instance_name"
+    
+    # ROUTING PROTOCOL SETTINGS
+    ospf_area: "area_number"
+    ospf_cost: "cost_value"
+    ospf_network_type: "point-to-point|broadcast"
+    
+    # HIGH AVAILABILITY
+    vrrp_group: "group_number"
+    vrrp_priority: "priority_value"
+    vrrp_virtual_ip: "virtual_ip"
+    
+    # SPANNING TREE
+    spanning_tree_mode: "normal|edge|network"
+    spanning_tree_guard: "root|loop|bpdu"
+    
+    # AGGREGATED PERFORMANCE METRICS
+    total_bandwidth: "aggregated_speed"
+    input_rate: "bps"
+    output_rate: "bps"
+    input_packets: "count"
+    output_packets: "count"
+    load_balancing: "src-dst-ip|src-dst-mac|src-ip|dst-ip"
+  }
+  
+  # PHYSICAL INTERFACE CONFIGURATIONS
+  interface_name: {
+    # REQUIRED INTERFACE PROPERTIES
+    description: "interface_description"
+    status: "up|down|admin-down|err-disabled"
+    bandwidth: "speed_with_units"
+    
+    # LAYER 2 SWITCHPORT CONFIGURATION
+    switchport_mode: "access|trunk|dynamic"
+    access_vlan: "vlan_number"
+    native_vlan: "vlan_number"
+    allowed_vlans: "vlan_list_or_all"
+    voice_vlan: "vlan_number"
+    
+    # PORT SECURITY
+    port_security_enabled: "true|false"
+    port_security_max: "max_addresses"
+    port_security_violation: "shutdown|restrict|protect"
+    
+    # PORT-CHANNEL MEMBERSHIP (for LAG member interfaces)
+    port_channel: "port_channel_name"
+    channel_group: "channel_group_number"
+    lacp_mode: "active|passive|on"
+    lacp_timeout: "fast|slow"
+    lacp_priority: "priority_value"
+    lacp_key: "key_value"
+    lacp_state: "bundled|standby|suspended|individual"
+    lacp_activity: "active|passive|timeout"
+    
+    # SPANNING TREE
+    spanning_tree_mode: "normal|edge|network"
+    spanning_tree_guard: "root|loop|bpdu"
+    
+    # POWER OVER ETHERNET
+    poe_enabled: "true|false"
+    poe_power: "watts"
+    poe_class: "class_number"
+    
+    # PERFORMANCE METRICS
+    input_rate: "bps"
+    output_rate: "bps"
+    input_packets: "count"
+    output_packets: "count"
+    input_errors: "count"
+    output_errors: "count"
+    crc_errors: "count"
+    
+    # LAYER 3 PROPERTIES (for routed ports)
+    ip_address: "interface_ip"
+    subnet_mask: "subnet_mask"
+    
+    # VRF ASSIGNMENT
+    vrf: "vrf_name"
+    vrf_forwarding: "vrf_instance_name"
+  }
+}
+
+# ============================================================================
+# VLAN DATABASE (Optional detailed VLAN structure)
+# ============================================================================
+vlan_database: {
+  switch_vlans: {
+    vlan_number: {
+      name: "vlan_name"
+      description: "vlan_description"
+      status: "active|suspended"
+      ports: "interface1,interface2,interface3"
+      spanning_tree_priority: "priority_value"
+    }
+  }
+}
+
+# ============================================================================
+# VRF CONFIGURATION (Optional detailed VRF structure)
+# ============================================================================
+vrf_database: {
+  switch_vrfs: {
+    vrf_name: {
+      # VRF IDENTIFICATION
+      rd: "route_distinguisher"
+      description: "vrf_description"
+      
+      # VRF INTERFACES
+      interfaces: "svi_vlan1,svi_vlan2,interface1"
+      
+      # ROUTING PROTOCOLS PER VRF
+      ospf_process_id: "vrf_ospf_process"
+      bgp_enabled: "true|false"
+      bgp_as: "as_number"
+      
+      # VRF ROUTING TABLE
+      route_count: "vrf_route_count"
+      connected_routes: "connected_count"
+      static_routes: "static_count"
+      dynamic_routes: "dynamic_count"
+    }
+  }
+}
+
+# ============================================================================
+# CONNECTION TOPOLOGY
+# ============================================================================
+# Use this format for all physical connections:
+# switch1.1/0/48 -> switch2.1/0/48
+# switch1.port_channel1 -> switch2.port_channel1
+
+# ============================================================================
+# SHOW COMMANDS FOR AUTOMATED POPULATION
+# ============================================================================
+# CISCO IOS/IOS-XE:
+# - show version (model, serial, firmware, uptime)
+# - show interfaces (interface configs, statistics)
+# - show interfaces status (interface status summary)
+# - show vlan (VLAN database)
+# - show vlan brief (VLAN summary)
+# - show ip interface brief (IP assignments, status)
+# - show spanning-tree (STP configuration)
+# - show etherchannel summary (port-channel status)
+# - show etherchannel detail (detailed LAG information)
+# - show lacp neighbor (LACP neighbor details)
+# - show power inline (PoE status)
+# - show ip route (routing table for L3 switches)
+# - show vrf (VRF configuration and status)
+# - show ip vrf detail (detailed VRF information)
+#
+# CISCO NX-OS:
+# - show version, show interface, show ip route
+# - show vlan brief (VLAN summary)
+# - show port-channel summary (port-channel status)
+# - show vpc (VPC configuration)
+# - show hsrp brief (HSRP configuration)
+# - show vrf (VRF instances and status)
+# - show vdc (Virtual Device Context information)
+#
+# ARUBA AOS (Procurve/Legacy):
+# - show version (system information)
+# - show interfaces (interface status and configuration)
+# - show vlans (VLAN configurations)
+# - show trunk (trunk/LAG configurations)
+# - show lacp (LACP status and configuration)
+# - show spanning-tree (STP configuration)
+#
+# ARUBA AOS-CX:
+# - show version detail (detailed system information)
+# - show interface all (comprehensive interface details)
+# - show vlan (VLAN configurations)
+# - show lag (LAG configurations and status)
+# - show lacp aggregates (LACP aggregate details)
+# - show vsx status (VSX cluster status)
+# - show spanning-tree (STP status)
+#
+# ARISTA EOS:
+# - show version (system and hardware information)
+# - show interfaces (interface configurations and status)
+# - show vlan (VLAN database)
+# - show port-channel (port-channel configurations)
+# - show lacp (LACP configurations and status)
+# - show mlag (MLAG configuration and status)
+# - show varp (Virtual ARP configuration)
+# - show spanning-tree (STP configuration)
+#
+# AUTOMATION TOOLS:
+# - Ansible network modules (ios_facts, nxos_facts, eos_facts)
+# - NAPALM getters (get_facts, get_interfaces, get_vlans, get_lldp_neighbors)
+# - Netmiko show command execution
+# - SNMP polling for statistics and status
+# - REST APIs (Cisco DNA Center, Arista eAPI, Aruba NetEdit)
+
+# ============================================================================
+# EXAMPLE SWITCH CONFIGURATION
+# ============================================================================
+example_switch: {
+  label: "Core Switch 1"
+  type: "switch"
+  mgmt_ip: "10.1.1.20"
+  hostname: "SW01-CORE"
+  model: "C9300-48P"
+  serial_number: "FCW2140L0GH"
+  firmware_version: "16.12.04"
+  
+  # LAYER 3 CAPABILITIES
+  ip_routing_enabled: "true"
+  routing_table_count: "45"
+  
+  # VRRP CONFIGURATION
+  vrrp_groups: "2"
+  
+  # MANAGEMENT SVI
+  vlan100: {
+    vlan_id: "100"
+    ip_address: "10.1.100.1"
+    subnet_mask: "255.255.255.0"
+    status: "up"
+    description: "Management VLAN"
+    vrrp_group: "100"
+    vrrp_priority: "110"
+    vrrp_virtual_ip: "10.1.100.254"
+  }
+  
+  # USER SVI
+  vlan10: {
+    vlan_id: "10"
+    ip_address: "10.1.10.1"
+    subnet_mask: "255.255.255.0"
+    status: "up"
+    description: "User VLAN"
+    helper_address: "10.1.1.10"
+    vrrp_group: "10"
+    vrrp_priority: "110"
+    vrrp_virtual_ip: "10.1.10.254"
+  }
+  
+  # CORE ISL PORT-CHANNEL
+  port_channel1: {
+    description: "Core ISL to SW02-CORE"
+    status: "up"
+    channel_group: "1"
+    protocol: "lacp"
+    lacp_mode: "active"
+    lacp_timeout: "fast"
+    member_interfaces: "1/0/47,1/0/48"
+    active_members: "2"
+    switchport_mode: "trunk"
+    native_vlan: 1
+    allowed_vlans: "all"
+    total_bandwidth: "20Gbps"
+  }
+  
+  # MEMBER INTERFACES
+  1/0/47: {
+    description: "Port-Channel1 Member 1"
+    status: "up"
+    bandwidth: "10Gbps"
+    port_channel: "port_channel1"
+    channel_group: "1"
+    lacp_mode: "active"
+    lacp_state: "bundled"
+  }
+  
+  1/0/48: {
+    description: "Port-Channel1 Member 2"  
+    status: "up"
+    bandwidth: "10Gbps"
+    port_channel: "port_channel1"
+    channel_group: "1"
+    lacp_mode: "active"
+    lacp_state: "bundled"
+  }
+  
+  # ACCESS PORT
+  1/0/1: {
+    description: "User Workstation"
+    status: "up"
+    bandwidth: "1Gbps"
+    switchport_mode: "access"
+    access_vlan: 10
+    spanning_tree_mode: "edge"
+    poe_enabled: "false"
+  }
+}
