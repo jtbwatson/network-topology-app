@@ -12,22 +12,22 @@ window.ConnectionDetailsPanel = ({
   const targetInterfaceConfig = interfacesData.get(selectedConnection.targetInterfaceKey);
 
   return (
-    <div className="space-y-3">
+    <div>
       {/* Connection Header */}
-      <div className="bg-gray-700 p-4 rounded-lg border border-gray-600">
-        <h3 className="font-semibold text-lg text-gray-100 mb-2">
+      <div className="bg-gray-700 p-3">
+        <h4 className="font-medium mb-1 text-gray-100 flex items-center gap-2">
           🔗 Connection Details
-        </h3>
-        <div className="text-sm bg-gray-600 p-2 rounded font-mono">
+        </h4>
+        <div className="text-xs text-gray-400 font-mono">
           <div className="flex items-center justify-between">
             <span className="text-blue-300">{selectedConnection.source.label}</span>
             <span className="text-green-400">↔</span>
             <span className="text-blue-300">{selectedConnection.target.label}</span>
           </div>
-          <div className="flex items-center justify-between mt-1 text-xs text-gray-300">
-            <span>{selectedConnection.sourceInterface}</span>
+          <div className="flex items-center justify-between mt-1 text-gray-300">
+            <span>{window.abbreviateInterfaceName(selectedConnection.sourceInterface)}</span>
             <span>to</span>
-            <span>{selectedConnection.targetInterface}</span>
+            <span>{window.abbreviateInterfaceName(selectedConnection.targetInterface)}</span>
           </div>
         </div>
       </div>
@@ -49,15 +49,17 @@ window.ConnectionDetailsPanel = ({
       />
 
       {/* Back to Device Details Button */}
-      <button
-        onClick={() => {
-          setSelectedConnection(null);
-          setSelectedDevice(null);
-        }}
-        className="w-full p-3 bg-gray-600 hover:bg-gray-500 text-white rounded-md text-sm font-medium transition-colors"
-      >
-        ← Back to Overview
-      </button>
+      <div className="p-3 border-t border-gray-600">
+        <button
+          onClick={() => {
+            setSelectedConnection(null);
+            setSelectedDevice(null);
+          }}
+          className="w-full p-2 bg-gray-600 hover:bg-gray-500 text-white rounded text-xs font-medium transition-colors"
+        >
+          ← Back to Overview
+        </button>
+      </div>
     </div>
   );
 };
@@ -83,78 +85,123 @@ const InterfaceDetailsCard = ({ device, interfaceName, interfaceConfig, cardColo
   const colors = colorClasses[cardColor];
 
   return (
-    <div className={`${colors.bg} border p-4 rounded-lg`}>
-      <h4 className={`font-semibold mb-2 ${colors.text} flex items-center`}>
-        <span className="text-xl mr-2">
-          {window.getDeviceIcon(device.type)}
-        </span>
-        {device.label}
-      </h4>
-      
-      <div className={`${colors.interfaceBg} p-2 rounded mb-2 border`}>
-        <div className={`text-xs ${colors.accent} uppercase tracking-wide font-semibold mb-1`}>
-          Interface
-        </div>
-        <div className={`${colors.text} font-mono text-sm`}>
-          {interfaceName}
-        </div>
+    <div className={`${colors.bg} border-t-4`} style={{borderTopColor: cardColor === 'blue' ? '#3B82F6' : '#10B981'}}>
+      <div className="px-3 pt-3 pb-1">
+        <h4 className={`font-medium ${colors.text} flex items-center justify-between`}>
+          <div className="flex items-center gap-2">
+            <span className="text-lg">
+              {window.getDeviceIcon(device.type)}
+            </span>
+            {device.label}
+          </div>
+          <div className={`text-sm ${colors.accent} font-mono font-bold`}>
+            {window.abbreviateInterfaceName(interfaceName)}
+          </div>
+        </h4>
       </div>
 
       {interfaceConfig?.config ? (
-        <div className="space-y-2">
-          {interfaceConfig.config.description && (
-            <div className={`${colors.configBg} p-2 rounded border`}>
-              <div className={`text-xs ${colors.accent} font-semibold mb-1`}>Description</div>
-              <div className={`${colors.text} text-sm`}>{interfaceConfig.config.description}</div>
-            </div>
-          )}
-          
-          <div className="grid grid-cols-2 gap-2">
+        <div className="px-3 pb-3">
+          <div className={`text-xs ${colors.text} space-y-1`}>
+            {interfaceConfig.config.description && (
+              <div className="flex justify-between">
+                <span className={colors.accent}>Description:</span> 
+                <span className="italic">{interfaceConfig.config.description}</span>
+              </div>
+            )}
+            
             {interfaceConfig.config.status && (
-              <div className={`${colors.configBg} p-2 rounded border`}>
-                <div className={`text-xs ${colors.accent} font-semibold mb-1`}>Status</div>
-                <div className={`text-sm font-semibold ${
+              <div className="flex justify-between">
+                <span className={colors.accent}>Status:</span> 
+                <span className={`font-semibold ${
                   interfaceConfig.config.status === "up" ? "text-green-300" : "text-red-300"
                 }`}>
                   {interfaceConfig.config.status.toUpperCase()}
-                </div>
+                </span>
               </div>
             )}
             
             {interfaceConfig.config.bandwidth && (
-              <div className={`${colors.configBg} p-2 rounded border`}>
-                <div className={`text-xs ${colors.accent} font-semibold mb-1`}>Bandwidth</div>
-                <div className={`${colors.text} text-sm font-mono`}>
-                  {interfaceConfig.config.bandwidth}
-                </div>
+              <div className="flex justify-between">
+                <span className={colors.accent}>Bandwidth:</span> 
+                <span>{interfaceConfig.config.bandwidth}</span>
               </div>
             )}
-          </div>
 
-          {(interfaceConfig.config.switchport_mode || interfaceConfig.config.native_vlan || interfaceConfig.config.access_vlan) && (
-            <div className={`${colors.configBg} p-2 rounded border`}>
-              <div className={`text-xs ${colors.accent} font-semibold mb-1`}>Configuration</div>
-              <div className={`${colors.text} text-sm space-y-1`}>
+            {/* Interface Configuration - different for routed vs switched */}
+            {interfaceConfig.config.switchport_mode === 'routed' ? (
+              /* Routed Interface Configuration */
+              <>
+                <div className="flex justify-between">
+                  <span className={colors.accent}>Mode:</span> 
+                  <span>Routed (Layer 3)</span>
+                </div>
+                {interfaceConfig.config.ip_address && (
+                  <div className="flex justify-between">
+                    <span className={colors.accent}>IP Address:</span> 
+                    <span className="font-mono">
+                      {interfaceConfig.config.subnet_mask ? 
+                        `${interfaceConfig.config.ip_address}/${window.subnetMaskToCIDR(interfaceConfig.config.subnet_mask)}` :
+                        interfaceConfig.config.ip_address
+                      }
+                    </span>
+                  </div>
+                )}
+                {interfaceConfig.config.ospf_area && (
+                  <div className="flex justify-between">
+                    <span className={colors.accent}>OSPF Area:</span> 
+                    <span className="font-mono">{interfaceConfig.config.ospf_area}</span>
+                  </div>
+                )}
+                {interfaceConfig.config.ospf_cost && (
+                  <div className="flex justify-between">
+                    <span className={colors.accent}>OSPF Cost:</span> 
+                    <span className="font-mono">{interfaceConfig.config.ospf_cost}</span>
+                  </div>
+                )}
+                {interfaceConfig.config.ospf_network_type && (
+                  <div className="flex justify-between">
+                    <span className={colors.accent}>OSPF Type:</span> 
+                    <span className="font-mono">{interfaceConfig.config.ospf_network_type}</span>
+                  </div>
+                )}
+              </>
+            ) : (interfaceConfig.config.switchport_mode || interfaceConfig.config.native_vlan || interfaceConfig.config.access_vlan) ? (
+              /* Switched Interface Configuration */
+              <>
                 {interfaceConfig.config.switchport_mode && (
-                  <div><span className={colors.accent}>Mode:</span> {interfaceConfig.config.switchport_mode}</div>
+                  <div className="flex justify-between">
+                    <span className={colors.accent}>Mode:</span> 
+                    <span>{interfaceConfig.config.switchport_mode.charAt(0).toUpperCase() + interfaceConfig.config.switchport_mode.slice(1)}</span>
+                  </div>
                 )}
                 {interfaceConfig.config.native_vlan && (
-                  <div><span className={colors.accent}>Native VLAN:</span> {interfaceConfig.config.native_vlan}</div>
+                  <div className="flex justify-between">
+                    <span className={colors.accent}>Native VLAN:</span> 
+                    <span className="font-mono">{interfaceConfig.config.native_vlan}</span>
+                  </div>
                 )}
                 {interfaceConfig.config.access_vlan && (
-                  <div><span className={colors.accent}>Access VLAN:</span> {interfaceConfig.config.access_vlan}</div>
+                  <div className="flex justify-between">
+                    <span className={colors.accent}>Access VLAN:</span> 
+                    <span className="font-mono">{interfaceConfig.config.access_vlan}</span>
+                  </div>
                 )}
                 {interfaceConfig.config.allowed_vlans && (
-                  <div><span className={colors.accent}>Allowed VLANs:</span> {interfaceConfig.config.allowed_vlans}</div>
+                  <div className="flex justify-between">
+                    <span className={colors.accent}>Allowed VLANs:</span> 
+                    <span className="font-mono">{interfaceConfig.config.allowed_vlans}</span>
+                  </div>
                 )}
-              </div>
-            </div>
-          )}
+              </>
+            ) : null}
+          </div>
         </div>
       ) : (
-        <div className={`text-center py-6 ${colors.accent}/60`}>
-          <div className="text-2xl mb-1">📄</div>
-          <div className="text-sm">No config data</div>
+        <div className="px-3 pb-3">
+          <div className={`text-center py-4 ${colors.accent}/60 text-xs`}>
+            📄 No config data
+          </div>
         </div>
       )}
     </div>

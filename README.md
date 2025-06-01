@@ -5,7 +5,7 @@ This is a Network Topology Visualization application that dynamically renders ne
 ## Architecture
 
 **Frontend Framework**: React 18 (loaded via CDN)
-- **D3.js**: For interactive network visualization and force-directed graphs
+- **vis.js Network**: For stable, grid-based network topology visualization
 - **Tailwind CSS**: For styling (loaded via CDN)
 - **Babel Standalone**: For JSX transformation in browser
 - **ES6 Modules**: Modular architecture with separated concerns
@@ -47,11 +47,11 @@ php -S localhost:8000
 ### Utilities (`src/utils/`)
 - **`d2Parser.js`** - D2 syntax parser extracting devices, interfaces, and connections
 - **`deviceUtils.js`** - Device type detection, icons, colors, and interface management
-- **`layoutUtils.js`** - D3 layout algorithms and force simulation controls
+- **`layoutUtils.js`** - Layout utility functions (legacy D3 utilities)
 
 ### Custom Hooks (`src/hooks/`)
 - **`useNetworkData.js`** - Manages D2 file loading, parsing, and error handling
-- **`useVisualization.js`** - D3 force simulation setup and interaction handling
+- **`useVisNetworkVisualization.js`** - vis.js Network visualization with stable positioning and grid controls
 
 ### Components (`src/components/`)
 - **`DeviceDetailsPanel.js`** - Layer 2 device information and interface details
@@ -60,8 +60,10 @@ php -S localhost:8000
 - **`Modals.js`** - Access points modal and routing table modal
 
 ### Core Features
-- **D3 Visualization Engine**: Force simulation for interactive node positioning
-- **Curved Path Rendering**: Multiple connections between devices with curve offsets
+- **vis.js Network Visualization**: Stable network topology with controlled physics and auto-stabilization
+- **Multiple Connection Handling**: Smart edge processing with minimal curves for clarity and clickability
+- **Grid-Based Layout**: Professional diagram positioning with snap-to-grid functionality
+- **Layout Controls**: Reset, hierarchical arrangement, and grid snap features
 - **Device Type Support**: Routers, switches, firewalls, wireless controllers
 - **Interface Management**: Physical ports and SVIs with detailed configuration
 - **Routing Information**: OSPF, BGP, static routes, and VRRP/HSRP status
@@ -134,8 +136,9 @@ device1.interface1 -> device2.interface2
 - Update site loading logic in `useNetworkData.js`
 
 **Modifying visualization**: 
-- Update D3 rendering code in `useVisualization.js`
-- Modify layout functions in `layoutUtils.js`
+- Update vis.js Network configuration in `useVisNetworkVisualization.js`
+- Modify network options, physics settings, or layout algorithms
+- Add new layout control functions (reset, hierarchical, grid snap)
 
 **Extending UI panels**: 
 - Edit component files in `src/components/`
@@ -151,3 +154,26 @@ device1.interface1 -> device2.interface2
 **Module Loading**: The application uses a pseudo-modular approach where components are loaded as global functions via Babel script tags. This allows for separation of concerns without requiring a build system.
 
 **Development Workflow**: When adding new files, always update `index.html` to include the script tag, and ensure dependencies are loaded in the correct order (utils → hooks → components → main app).
+
+## Visualization Technology
+
+The application uses **vis.js Network** for professional, stable network topology visualization. This provides:
+
+### Key Features
+- **Stable Positioning**: Nodes don't bounce around like D3 force simulations
+- **Professional Layout**: Grid-based positioning suitable for network documentation
+- **Multiple Connection Support**: Handles multiple links between same devices with minimal curves
+- **Interactive Controls**: Reset layout, hierarchical arrangement, and grid snap functionality
+
+### User Interface
+- **Click & Drag**: Move devices around the canvas
+- **Zoom**: Scroll to zoom in/out
+- **Device Selection**: Click devices or connections for detailed information
+- **Layout Controls**: Use buttons to reset, arrange hierarchically, or enable grid snap
+
+### Edge Processing
+Multiple connections between the same devices are automatically processed to:
+- Keep the first connection perfectly straight
+- Add minimal curves (0.08-0.2 roundness) to subsequent connections
+- Ensure all connections remain individually clickable
+- Maintain visual clarity and professional appearance

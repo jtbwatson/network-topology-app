@@ -66,7 +66,7 @@ window.useVisNetworkVisualization = ({
         edges: {
           color: {
             color: '#6B7280',
-            highlight: '#EF4444',
+            highlight: '#10B981',
             hover: '#9CA3AF'
           },
           width: 3,
@@ -114,6 +114,9 @@ window.useVisNetworkVisualization = ({
 
       // Event handlers
       network.on('click', function(params) {
+        // Clear any existing interface labels
+        window.clearInterfaceLabels(containerRef.current);
+        
         if (params.nodes.length > 0) {
           // Node clicked
           const nodeId = params.nodes[0];
@@ -135,20 +138,19 @@ window.useVisNetworkVisualization = ({
             const targetDevice = graphData.nodes.find(n => n.id === edge.to);
             
             if (sourceDevice && targetDevice) {
-              const originalLink = graphData.links.find(l => 
-                (l.source === edge.from && l.target === edge.to) ||
-                (l.source === edge.to && l.target === edge.from)
-              );
-              
+              // Use the interface data directly from the edge - this ensures we get the right connection
               const connectionData = {
-                id: `${edge.from}-${edge.to}`,
+                id: `${edge.from}-${edge.to}-${edge.sourceInterface}-${edge.targetInterface}`,
                 source: sourceDevice,
                 target: targetDevice,
-                sourceInterface: originalLink?.sourceInterface || "unknown",
-                targetInterface: originalLink?.targetInterface || "unknown",
-                sourceInterfaceKey: originalLink?.sourceInterfaceKey || "",
-                targetInterfaceKey: originalLink?.targetInterfaceKey || ""
+                sourceInterface: edge.sourceInterface || "unknown",
+                targetInterface: edge.targetInterface || "unknown",
+                sourceInterfaceKey: `${edge.from}.${edge.sourceInterface}`,
+                targetInterfaceKey: `${edge.to}.${edge.targetInterface}`
               };
+
+              // Show interface labels for selected connection
+              window.showInterfaceLabels(network, edge, connectionData, containerRef.current);
 
               setSelectedConnection(connectionData);
               setSelectedDevice(null);
@@ -169,6 +171,9 @@ window.useVisNetworkVisualization = ({
         console.log('vis.js network stabilized');
         network.setOptions({ physics: { enabled: false } });
       });
+
+      // Note: Enhanced selection effects disabled for now to ensure stability
+      // The built-in vis.js selection highlighting with green colors should work fine
 
       console.log('vis.Network instance created');
       
@@ -220,7 +225,7 @@ window.convertToVisNetwork = (graphData) => {
                 deviceColor === '#7C3AED' ? '#6D28D9' : '#374151',
         highlight: {
           background: deviceColor,
-          border: '#EF4444'
+          border: '#10B981'
         }
       },
       size: node.type === 'router' || node.type === 'wireless_controller' ? 50 : 
@@ -247,13 +252,17 @@ window.convertToVisNetwork = (graphData) => {
     const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
     const targetId = typeof link.target === 'object' ? link.target.id : link.target;
     
+    // Store interface info but don't show labels by default
+    const sourceInterface = link.sourceInterface || 'unknown';
+    const targetInterface = link.targetInterface || 'unknown';
+    
     edges.add({
       id: `edge-${index}`,
       from: sourceId,
       to: targetId,
-      title: `${sourceId} -> ${targetId}\nSource: ${link.sourceInterface || 'unknown'}\nTarget: ${link.targetInterface || 'unknown'}`,
-      sourceInterface: link.sourceInterface || "unknown",
-      targetInterface: link.targetInterface || "unknown",
+      title: `${sourceId} -> ${targetId}\nSource: ${sourceInterface}\nTarget: ${targetInterface}`,
+      sourceInterface: sourceInterface,
+      targetInterface: targetInterface,
       smooth: link.smooth
     });
   });
@@ -421,4 +430,90 @@ window.enableVisGridSnap = (visNetworkRef, gridSize = 50) => {
     });
     console.log(`Grid snap enabled with ${gridSize}px grid`);
   }
+};
+
+// Show interface labels positioned near their respective devices
+window.showInterfaceLabels = (network, edge, connectionData, container) => {
+  // Clear existing labels first
+  window.clearInterfaceLabels(container);
+  
+  try {
+    // Get positions of the connected nodes
+    const fromPos = network.getPosition(edge.from);
+    const toPos = network.getPosition(edge.to);
+    
+    // Calculate label positions along the edge, closer to each device
+    const dx = toPos.x - fromPos.x;
+    const dy = toPos.y - fromPos.y;
+    
+    // Position labels at 25% and 75% along the edge
+    const sourceX = fromPos.x + dx * 0.25;
+    const sourceY = fromPos.y + dy * 0.25;
+    const targetX = fromPos.x + dx * 0.75;
+    const targetY = fromPos.y + dy * 0.75;
+    
+    // Convert network coordinates to canvas coordinates
+    const sourceCanvasPos = network.canvasToDOM({ x: sourceX, y: sourceY });
+    const targetCanvasPos = network.canvasToDOM({ x: targetX, y: targetY });
+    
+    // Create source interface label
+    const sourceLabel = document.createElement('div');
+    sourceLabel.className = 'interface-label';
+    sourceLabel.style.cssText = `
+      position: absolute;
+      left: ${sourceCanvasPos.x}px;
+      top: ${sourceCanvasPos.y}px;
+      background: rgba(59, 130, 246, 0.9);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: monospace;
+      font-weight: bold;
+      pointer-events: none;
+      z-index: 1000;
+      white-space: nowrap;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(59, 130, 246, 1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    `;
+    sourceLabel.textContent = window.abbreviateInterfaceName(connectionData.sourceInterface);
+    
+    // Create target interface label
+    const targetLabel = document.createElement('div');
+    targetLabel.className = 'interface-label';
+    targetLabel.style.cssText = `
+      position: absolute;
+      left: ${targetCanvasPos.x}px;
+      top: ${targetCanvasPos.y}px;
+      background: rgba(16, 185, 129, 0.9);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: monospace;
+      font-weight: bold;
+      pointer-events: none;
+      z-index: 1000;
+      white-space: nowrap;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(16, 185, 129, 1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    `;
+    targetLabel.textContent = window.abbreviateInterfaceName(connectionData.targetInterface);
+    
+    // Add labels to container
+    container.appendChild(sourceLabel);
+    container.appendChild(targetLabel);
+    
+    console.log('Interface labels shown for connection:', connectionData.id);
+  } catch (error) {
+    console.error('Error showing interface labels:', error);
+  }
+};
+
+// Clear all interface labels
+window.clearInterfaceLabels = (container) => {
+  const labels = container.querySelectorAll('.interface-label');
+  labels.forEach(label => label.remove());
 };

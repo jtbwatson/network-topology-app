@@ -26,9 +26,9 @@ rbranch1: {
   
   GigabitEthernet0/0/1: {
     description: "Link to rbranch2"
-    switchport_mode: "trunk"
-    native_vlan: 1
-    allowed_vlans: "1,10,20,30,100-200"
+    switchport_mode: "routed"
+    native_vlan:
+    allowed_vlans:
     status: "up"
     bandwidth: "1Gbps"
     ip_address: "10.2.2.1"
@@ -40,9 +40,9 @@ rbranch1: {
   
   GigabitEthernet0/0/2: {
     description: "Link to sbranch1"
-    switchport_mode: "trunk"
-    native_vlan: 1
-    allowed_vlans: "1,10,20,30,100-200"
+    switchport_mode: "routed"
+    native_vlan:
+    allowed_vlans:
     status: "up"
     bandwidth: "1Gbps"
     ip_address: "10.2.3.1"
@@ -223,14 +223,14 @@ wbranch1: {
   ssid_count: "3"
   ssids: "Corporate-WiFi,Guest-WiFi,IoT-WiFi"
   
-  port1: {
+  0/0/1: {
     description: "Primary uplink to sbranch1"
     status: "up"
     bandwidth: "1Gbps"
     vlan: 100
   }
   
-  port2: {
+  0/0/2: {
     description: "Secondary uplink to sbranch1"
     status: "up"
     bandwidth: "1Gbps"
@@ -255,14 +255,14 @@ wbranch2: {
   ssid_count: "3"
   ssids: "Corporate-WiFi,Guest-WiFi,IoT-WiFi"
   
-  port1: {
+  0/0/1: {
     description: "Primary uplink to sbranch1"
     status: "up"
     bandwidth: "1Gbps"
     vlan: 100
   }
   
-  port2: {
+  0/0/2: {
     description: "Secondary uplink to sbranch1"
     status: "up"
     bandwidth: "1Gbps"
@@ -319,7 +319,7 @@ routing_table: {
 rbranch1.GigabitEthernet0/0/1 -> rbranch2.GigabitEthernet0/0/1
 rbranch1.GigabitEthernet0/0/2 -> sbranch1.1/0/1
 rbranch2.GigabitEthernet0/0/2 -> sbranch1.1/0/2
-sbranch1.1/0/3 -> wbranch1.port1
-sbranch1.1/0/4 -> wbranch1.port2
-sbranch1.1/0/5 -> wbranch2.port1
-sbranch1.1/0/6 -> wbranch2.port2
+sbranch1.1/0/3 -> wbranch1.0/0/1
+sbranch1.1/0/4 -> wbranch1.0/0/2
+sbranch1.1/0/5 -> wbranch2.0/0/1
+sbranch1.1/0/6 -> wbranch2.0/0/2

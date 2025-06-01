@@ -1,16 +1,8 @@
 // Layer 3 information panel component
 
-window.Layer3Panel = ({ selectedDevice, interfacesData, setShowRoutingTableModal }) => {
-  if (!selectedDevice) return null;
-
-  const deviceSVIs = window.getDeviceSVIs(selectedDevice.id, selectedDevice.device);
-  const routerLayer3Interfaces = window.getRouterLayer3Interfaces(selectedDevice.id, interfacesData);
-  const vrrpInterfaces = window.getVRRPInterfaces(selectedDevice.id, selectedDevice.device, interfacesData);
-  const deviceInterfaces = window.getDeviceInterfaces(selectedDevice.id, interfacesData);
-  const deviceType = selectedDevice.type;
-  const device = selectedDevice.device || {};
-  const staticRoutesCount = window.getStaticRoutesCount(device.static_routes);
-
+window.Layer3Panel = ({ selectedDevice, selectedConnection, interfacesData, setShowRoutingTableModal }) => {
+  // Always render the panel, but show different content based on selection
+  
   return (
     <div className="w-80 bg-gray-800 shadow-lg border-l border-gray-700 overflow-y-auto h-full">
       <div>
@@ -24,62 +16,103 @@ window.Layer3Panel = ({ selectedDevice, interfacesData, setShowRoutingTableModal
         </div>
 
         <div className="">
-          {/* Routing Protocol Information */}
-          {(deviceType === "router" || deviceType === "switch") && (
-            <RoutingProtocolsSection device={device} setShowRoutingTableModal={setShowRoutingTableModal} staticRoutesCount={staticRoutesCount} />
-          )}
+          {selectedDevice ? (
+            <>
+              {(() => {
+                const deviceSVIs = window.getDeviceSVIs(selectedDevice.id, selectedDevice.device);
+                const routerLayer3Interfaces = window.getRouterLayer3Interfaces(selectedDevice.id, interfacesData);
+                const vrrpInterfaces = window.getVRRPInterfaces(selectedDevice.id, selectedDevice.device, interfacesData);
+                const deviceInterfaces = window.getDeviceInterfaces(selectedDevice.id, interfacesData);
+                const deviceType = selectedDevice.type;
+                const device = selectedDevice.device || {};
+                const staticRoutesCount = window.getStaticRoutesCount(device.static_routes);
 
-          {/* VRRP/HSRP Information */}
-          {(deviceType === "router" || deviceType === "switch") && (device.vrrp_status || device.hsrp_enabled || vrrpInterfaces.length > 0) && (
-            <HighAvailabilitySection device={device} vrrpInterfaces={vrrpInterfaces} />
-          )}
+                return (
+                  <>
+                    {/* Device-specific Layer 3 Information */}
+                    {/* Routing Protocol Information */}
+                    {(deviceType === "router" || deviceType === "switch") && (
+                      <RoutingProtocolsSection device={device} setShowRoutingTableModal={setShowRoutingTableModal} staticRoutesCount={staticRoutesCount} />
+                    )}
 
-          {/* Layer 3 Interfaces - Different for Routers vs Switches */}
-          {deviceType === "router" && routerLayer3Interfaces.length > 0 && (
-            <RouterLayer3Interfaces routerLayer3Interfaces={routerLayer3Interfaces} />
-          )}
+                    {/* VRRP/HSRP Information */}
+                    {(deviceType === "router" || deviceType === "switch") && (device.vrrp_status || device.hsrp_enabled || vrrpInterfaces.length > 0) && (
+                      <HighAvailabilitySection device={device} vrrpInterfaces={vrrpInterfaces} />
+                    )}
 
-          {/* SVI Information for Switches Only */}
-          {deviceType === "switch" && (
-            <SwitchSVISection deviceSVIs={deviceSVIs} />
-          )}
+                    {/* Layer 3 Interfaces - Different for Routers vs Switches */}
+                    {deviceType === "router" && routerLayer3Interfaces.length > 0 && (
+                      <RouterLayer3Interfaces routerLayer3Interfaces={routerLayer3Interfaces} />
+                    )}
 
-          {/* Firewall Security Zones (Layer 3 related) */}
-          {deviceType === "firewall" && (
-            <FirewallSecurityZones />
-          )}
-        </div>
+                    {/* SVI Information for Switches Only */}
+                    {deviceType === "switch" && (
+                      <SwitchSVISection deviceSVIs={deviceSVIs} />
+                    )}
 
-        {/* Device-Specific Features Header */}
+                    {/* Firewall Security Zones (Layer 3 related) */}
+                    {deviceType === "firewall" && (
+                      <FirewallSecurityZones />
+                    )}
 
-        <div className="bg-gray-700 p-3 border-t-4 border-gray-600">
-          <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">
-            <span className="text-2xl">🔧</span>
-            Device-Specific Features
-          </h2>
-        </div>
+                    {/* Device-Specific Features Header */}
+                    <div className="bg-gray-700 p-3 border-t-4 border-gray-600">
+                      <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">
+                        <span className="text-2xl">🔧</span>
+                        Device-Specific Features
+                      </h2>
+                    </div>
 
-        {/* Lower Section - Device-Specific Features */}
-        <div>
+                    {/* Lower Section - Device-Specific Features */}
+                    <div>
+                      {/* Router-specific features */}
+                      {deviceType === "router" && (
+                        <RouterSpecificFeatures device={device} deviceInterfaces={deviceInterfaces} />
+                      )}
 
-          {/* Router-specific features */}
-          {deviceType === "router" && (
-            <RouterSpecificFeatures device={device} deviceInterfaces={deviceInterfaces} />
-          )}
+                      {/* Switch-specific features */}
+                      {deviceType === "switch" && (
+                        <SwitchSpecificFeatures device={device} deviceInterfaces={deviceInterfaces} />
+                      )}
 
-          {/* Switch-specific features */}
-          {deviceType === "switch" && (
-            <SwitchSpecificFeatures device={device} deviceInterfaces={deviceInterfaces} />
-          )}
+                      {/* Firewall-specific features */}
+                      {deviceType === "firewall" && (
+                        <FirewallSpecificFeatures device={device} />
+                      )}
 
-          {/* Firewall-specific features */}
-          {deviceType === "firewall" && (
-            <FirewallSpecificFeatures device={device} />
-          )}
-
-          {/* Wireless Controller features */}
-          {deviceType === "wireless_controller" && (
-            <WirelessControllerFeatures device={device} />
+                      {/* Wireless Controller features */}
+                      {deviceType === "wireless_controller" && (
+                        <WirelessControllerFeatures device={device} />
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
+            </>
+          ) : selectedConnection ? (
+            /* Connection Layer 3 Information */
+            <div className="p-4">
+              <div className="text-center text-gray-400">
+                <div className="text-3xl mb-2">🔗</div>
+                <h3 className="text-lg font-semibold text-gray-200 mb-2">Connection Selected</h3>
+                <p className="text-sm">View Layer 3 details in the left panel</p>
+              </div>
+            </div>
+          ) : (
+            /* Default state - no selection */
+            <div className="p-4">
+              <div className="text-center text-gray-400">
+                <div className="text-4xl mb-4">📡</div>
+                <h3 className="text-lg font-semibold text-gray-200 mb-2">No Selection</h3>
+                <p className="text-sm mb-2">Click on a device to view Layer 3 information</p>
+                <div className="text-xs text-gray-500 space-y-1">
+                  <div>• Routing protocols (OSPF, BGP)</div>
+                  <div>• VRRP/HSRP status</div>
+                  <div>• Layer 3 interfaces & SVIs</div>
+                  <div>• Static routes</div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>

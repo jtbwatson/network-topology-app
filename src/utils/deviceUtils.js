@@ -157,8 +157,13 @@ const abbreviateInterfaceName = (name) => {
 const getInterfaceModeIndicator = (config) => {
   if (!config) return '';
   
-  // Check if it's a routed interface (has IP but no switchport mode)
-  if (config.ip_address && !config.switchport_mode) {
+  // Check if it's explicitly configured as routed
+  if (config.switchport_mode === 'routed') {
+    return 'R';
+  }
+  
+  // Check if it's a routed interface (has IP but no switchport mode or switchport mode is routed)
+  if (config.ip_address && (!config.switchport_mode || config.switchport_mode === 'routed')) {
     return 'R';
   }
   
@@ -177,8 +182,45 @@ window.getDeviceIcon = getDeviceIcon;
 window.getDeviceColor = getDeviceColor;
 window.getDeviceInterfaces = getDeviceInterfaces;
 window.getDeviceSVIs = getDeviceSVIs;
+// Function to convert subnet mask to CIDR notation
+const subnetMaskToCIDR = (subnetMask) => {
+  if (!subnetMask) return '';
+  
+  // Convert common subnet masks to CIDR
+  const subnetMap = {
+    '255.255.255.255': '32',
+    '255.255.255.254': '31',
+    '255.255.255.252': '30',
+    '255.255.255.248': '29',
+    '255.255.255.240': '28',
+    '255.255.255.224': '27',
+    '255.255.255.192': '26',
+    '255.255.255.128': '25',
+    '255.255.255.0': '24',
+    '255.255.254.0': '23',
+    '255.255.252.0': '22',
+    '255.255.248.0': '21',
+    '255.255.240.0': '20',
+    '255.255.224.0': '19',
+    '255.255.192.0': '18',
+    '255.255.128.0': '17',
+    '255.255.0.0': '16',
+    '255.254.0.0': '15',
+    '255.252.0.0': '14',
+    '255.248.0.0': '13',
+    '255.240.0.0': '12',
+    '255.224.0.0': '11',
+    '255.192.0.0': '10',
+    '255.128.0.0': '9',
+    '255.0.0.0': '8'
+  };
+  
+  return subnetMap[subnetMask] || subnetMask;
+};
+
 window.getRouterLayer3Interfaces = getRouterLayer3Interfaces;
 window.getVRRPInterfaces = getVRRPInterfaces;
 window.getStaticRoutesCount = getStaticRoutesCount;
 window.abbreviateInterfaceName = abbreviateInterfaceName;
 window.getInterfaceModeIndicator = getInterfaceModeIndicator;
+window.subnetMaskToCIDR = subnetMaskToCIDR;

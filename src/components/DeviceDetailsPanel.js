@@ -163,7 +163,12 @@ window.DeviceDetailsPanel = ({ selectedDevice, interfacesData }) => {
                         {iface.config.ip_address && (
                           <div className="col-span-2">
                             <span className="text-blue-400">IP Address:</span>
-                            <span className="text-blue-200 ml-1 font-mono">{iface.config.ip_address}/{iface.config.subnet_mask}</span>
+                            <span className="text-blue-200 ml-1 font-mono">
+                              {iface.config.subnet_mask ? 
+                                `${iface.config.ip_address}/${window.subnetMaskToCIDR(iface.config.subnet_mask)}` :
+                                iface.config.ip_address
+                              }
+                            </span>
                           </div>
                         )}
                       </div>
