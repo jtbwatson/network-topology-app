@@ -89,9 +89,11 @@ const InterfaceDetailsCard = ({ device, interfaceName, interfaceConfig, cardColo
       <div className="px-3 pt-3 pb-1">
         <h4 className={`font-medium ${colors.text} flex items-center justify-between`}>
           <div className="flex items-center gap-2">
-            <span className="text-lg">
-              {window.getDeviceIcon(device.type)}
-            </span>
+            <img 
+              src={window.getDeviceIcon(device.type)} 
+              alt={device.type}
+              className="w-5 h-5"
+            />
             {device.label}
           </div>
           <div className={`text-sm ${colors.accent} font-mono font-bold`}>
@@ -195,6 +197,32 @@ const InterfaceDetailsCard = ({ device, interfaceName, interfaceConfig, cardColo
                 )}
               </>
             ) : null}
+
+            {/* Port Channel Information */}
+            {interfaceConfig.config.protocol && (
+              <div className="flex justify-between">
+                <span className={colors.accent}>Protocol:</span> 
+                <span className="font-semibold text-green-300">{interfaceConfig.config.protocol}</span>
+              </div>
+            )}
+            {interfaceConfig.config.members && (
+              <div className="flex justify-between">
+                <span className={colors.accent}>Members:</span> 
+                <span className="font-mono text-green-300">{interfaceConfig.config.members}</span>
+              </div>
+            )}
+            {interfaceConfig.config.channel_group && (
+              <div className="flex justify-between">
+                <span className={colors.accent}>Channel Group:</span> 
+                <span className="text-green-300">{interfaceConfig.config.channel_group}</span>
+              </div>
+            )}
+            {interfaceConfig.config.load_balancing && (
+              <div className="flex justify-between">
+                <span className={colors.accent}>Load Balancing:</span> 
+                <span className="text-green-300">{interfaceConfig.config.load_balancing}</span>
+              </div>
+            )}
           </div>
         </div>
       ) : (

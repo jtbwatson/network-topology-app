@@ -11,7 +11,7 @@ window.getTypeFromLabel = (label) => {
   if (lower.includes("access point") || lower.includes("ap"))
     return "access_point";
   if (lower.includes("isp") || lower.includes("wan") || lower.includes("provider"))
-    return "wan_provider";
+    return "wan";
   if (lower.includes("internet") || lower.includes("inet"))
     return "internet";
   if (lower.includes("mpls") || lower.includes("private"))
@@ -31,6 +31,7 @@ window.getDeviceIcon = (type) => {
     access_point: 'assets/icons/wifi.svg',
     server: 'assets/icons/router.svg',
     external: 'assets/icons/cloud.svg',
+    wan: 'assets/icons/cloud.svg',
     wan_provider: 'assets/icons/cloud.svg',
     internet: 'assets/icons/cloud.svg',
     mpls: 'assets/icons/cloud.svg',
@@ -49,8 +50,9 @@ window.getDeviceColor = (type) => {
     wireless_controller: "#8B5CF6",
     access_point: "#14B8A6",
     server: "#16A34A",
-    external: "#9CA3AF",
-    wan_provider: "#9CA3AF",
+    external: "#EAB308",
+    wan: "#EAB308",
+    wan_provider: "#EAB308",
     internet: "#3B82F6",
     mpls: "#6B7280",
     unknown: "#6B7280",
@@ -173,6 +175,16 @@ const abbreviateInterfaceName = (name) => {
 // Function to get interface mode indicator
 const getInterfaceModeIndicator = (config) => {
   if (!config) return '';
+  
+  // Check if it's a port channel
+  if (config.protocol === 'LACP' || config.members) {
+    return 'PC';
+  }
+  
+  // Check if it's a port channel member
+  if (config.channel_group) {
+    return 'M';
+  }
   
   // Check if it's explicitly configured as routed
   if (config.switchport_mode === 'routed') {

@@ -26,7 +26,9 @@ window.DeviceDetailsPanel = ({ selectedDevice, interfacesData }) => {
     !key.includes('default_gateway') &&
     !key.includes('dhcp') && // Exclude DHCP-related properties
     key !== 'svis' &&
-    key !== 'mgmt_ip' // Exclude mgmt_ip since it's shown explicitly above
+    key !== 'mgmt_ip' && // Exclude mgmt_ip since it's shown explicitly above
+    // For WAN devices, exclude IP/status fields
+    !(deviceType?.includes('wan') && (key === 'status' || key === 'ip_address' || key === 'subnet_mask'))
   );
 
   return (
@@ -34,13 +36,17 @@ window.DeviceDetailsPanel = ({ selectedDevice, interfacesData }) => {
       {/* Device Properties - Layer 2 focused */}
       <div className="bg-gray-700 p-3">
         <h4 className="font-medium mb-1 text-gray-100 flex items-center gap-2">
-          <span className="text-xl">{window.getDeviceIcon(deviceType)}</span>
+          <img 
+            src={window.getDeviceIcon(deviceType)} 
+            alt={deviceType}
+            className="w-6 h-6"
+          />
           {selectedDevice.label || selectedDevice.id}
         </h4>
         <div className="space-y-1 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-400">Device Type:</span>
-            <span className="text-gray-300 capitalize">{deviceType}</span>
+            <span className="text-gray-300 capitalize">{deviceType.includes('wan') ? 'WAN' : deviceType}</span>
           </div>
           {device.mgmt_ip && (
             <div className="flex justify-between">
@@ -117,13 +123,15 @@ window.DeviceDetailsPanel = ({ selectedDevice, interfacesData }) => {
                           </span>
                         )}
                       </div>
-                      <div className={`text-xs px-2 py-0.5 rounded font-medium ml-2 ${
-                        iface.config.status === "up" 
-                          ? "bg-green-800 text-green-200" 
-                          : "bg-red-800 text-red-200"
-                      }`}>
-                        {iface.config.status?.toUpperCase() || "Unknown"}
-                      </div>
+                      {!deviceType?.includes('wan') && (
+                        <div className={`text-xs px-2 py-0.5 rounded font-medium ml-2 ${
+                          iface.config.status === "up" 
+                            ? "bg-green-800 text-green-200" 
+                            : "bg-red-800 text-red-200"
+                        }`}>
+                          {iface.config.status?.toUpperCase() || "Unknown"}
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -160,7 +168,7 @@ window.DeviceDetailsPanel = ({ selectedDevice, interfacesData }) => {
                             <span className="text-yellow-300 ml-1">{iface.config.allowed_vlans}</span>
                           </div>
                         )}
-                        {iface.config.ip_address && (
+                        {iface.config.ip_address && !deviceType?.includes('wan') && (
                           <div className="col-span-2">
                             <span className="text-blue-400">IP Address:</span>
                             <span className="text-blue-200 ml-1 font-mono">
@@ -169,6 +177,36 @@ window.DeviceDetailsPanel = ({ selectedDevice, interfacesData }) => {
                                 iface.config.ip_address
                               }
                             </span>
+                          </div>
+                        )}
+                        {iface.config.protocol && (
+                          <div>
+                            <span className="text-blue-400">Protocol:</span>
+                            <span className="text-green-300 ml-1">{iface.config.protocol}</span>
+                          </div>
+                        )}
+                        {iface.config.members && (
+                          <div className="col-span-2">
+                            <span className="text-blue-400">Members:</span>
+                            <span className="text-green-300 ml-1 font-mono">{iface.config.members}</span>
+                          </div>
+                        )}
+                        {iface.config.channel_group && (
+                          <div>
+                            <span className="text-blue-400">Channel Group:</span>
+                            <span className="text-green-300 ml-1">{iface.config.channel_group}</span>
+                          </div>
+                        )}
+                        {iface.config.channel_group_mode && (
+                          <div>
+                            <span className="text-blue-400">LACP Mode:</span>
+                            <span className="text-green-300 ml-1">{iface.config.channel_group_mode}</span>
+                          </div>
+                        )}
+                        {iface.config.load_balancing && (
+                          <div className="col-span-2">
+                            <span className="text-blue-400">Load Balancing:</span>
+                            <span className="text-green-300 ml-1">{iface.config.load_balancing}</span>
                           </div>
                         )}
                       </div>

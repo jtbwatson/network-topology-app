@@ -5,14 +5,14 @@
 # Device Definitions with Interface Configurations and Routing
 
 # External/WAN Connections
-isp_provider: {
-  label: "ISP Provider"
-  type: "wan_provider"
+isp1: {
+  label: "AT&T"
+  type: "wan"
   mgmt_ip: "10.2.1.1"
   
   # Provider Information
-  provider_name: "MegaCorp ISP"
-  circuit_id: "MPLS-12345"
+  provider_name: "AT&T"
+  circuit_id: "ATT-MPLS-1234"
   bandwidth: "100Mbps"
   circuit_type: "MPLS"
   sla_class: "Business"
@@ -24,8 +24,19 @@ isp_provider: {
     ip_address: "10.2.1.1"
     subnet_mask: "255.255.255.248"
   }
+}
+isp2: {
+  label: "Verizon"
+  type: "wan"
+  mgmt_ip: "10.2.1.9"
   
-  WAN2: {
+  # Provider Information
+  provider_name: "Verizon"
+  circuit_id: "VZ-MPLS-1234"
+  bandwidth: "100Mbps"
+  circuit_type: "MPLS"
+  sla_class: "Business"  
+  WAN1: {
     description: "Secondary WAN Circuit"
     status: "up"
     bandwidth: "50Mbps"
@@ -133,9 +144,9 @@ rbranch2: {
   
   GigabitEthernet0/0/1: {
     description: "Link to rbranch1"
-    switchport_mode: "trunk"
-    native_vlan: 1
-    allowed_vlans: "1,10,20,30,100-200"
+    switchport_mode: "routed"
+    native_vlan: 
+    allowed_vlans: 
     status: "up"
     bandwidth: "1Gbps"
     ip_address: "10.2.2.2"
@@ -147,9 +158,9 @@ rbranch2: {
   
   GigabitEthernet0/0/2: {
     description: "Link to sbranch1"
-    switchport_mode: "trunk"
-    native_vlan: 1
-    allowed_vlans: "1,10,20,30,100-200"
+    switchport_mode: "routed"
+    native_vlan:
+    allowed_vlans:
     status: "up"
     bandwidth: "1Gbps"
     ip_address: "10.2.3.2"
@@ -376,8 +387,8 @@ routing_table: {
 # Connection Topology - Simple References
 
 # WAN Connections
-rbranch1.GigabitEthernet0/0/0 -> isp_provider.WAN1
-rbranch2.GigabitEthernet0/0/0 -> isp_provider.WAN2
+rbranch1.GigabitEthernet0/0/0 -> isp1.WAN1
+rbranch2.GigabitEthernet0/0/0 -> isp2.WAN1
 
 # Internal Connections
 rbranch1.GigabitEthernet0/0/1 -> rbranch2.GigabitEthernet0/0/1

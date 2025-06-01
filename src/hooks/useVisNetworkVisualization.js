@@ -188,6 +188,47 @@ window.useVisNetworkVisualization = ({
         network.setOptions({ physics: { enabled: false } });
       });
 
+      // Custom drawing for port channel indicators
+      network.on('afterDrawing', function(ctx) {
+        // Get current network state
+        const edges = network.body.data.edges;
+        const positions = network.getPositions();
+        const selectedEdges = network.getSelectedEdges();
+        
+        // Draw ellipse indicators for port channels
+        edges.forEach(edge => {
+          if (edge.isPortChannel) {
+            const fromPos = positions[edge.from];
+            const toPos = positions[edge.to];
+            
+            if (fromPos && toPos) {
+              // Calculate midpoint
+              const midX = (fromPos.x + toPos.x) / 2;
+              const midY = (fromPos.y + toPos.y) / 2;
+              
+              // Check if this edge is selected
+              const isSelected = selectedEdges.includes(edge.id);
+              
+              // Draw ellipse/circle indicator
+              ctx.save();
+              if (isSelected) {
+                ctx.strokeStyle = '#10B981'; // Green when selected
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.2)'; // Semi-transparent green fill
+              } else {
+                ctx.strokeStyle = '#6B7280'; // Gray when not selected
+                ctx.fillStyle = 'rgba(107, 114, 128, 0.2)'; // Semi-transparent gray fill
+              }
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.ellipse(midX, midY, 12, 8, 0, 0, 2 * Math.PI);
+              ctx.fill();
+              ctx.stroke();
+              ctx.restore();
+            }
+          }
+        });
+      });
+
       // Note: Enhanced selection effects disabled for now to ensure stability
       // The built-in vis.js selection highlighting with green colors should work fine
 
@@ -240,7 +281,8 @@ window.convertToVisNetwork = (graphData) => {
         border: deviceColor === '#DC2626' ? '#B91C1C' : 
                 deviceColor === '#2563EB' ? '#1D4ED8' :
                 deviceColor === '#059669' ? '#047857' :
-                deviceColor === '#7C3AED' ? '#6D28D9' : '#374151',
+                deviceColor === '#7C3AED' ? '#6D28D9' :
+                deviceColor === '#EAB308' ? '#CA8A04' : '#374151',
         highlight: {
           background: deviceColor,
           border: '#10B981'
@@ -297,14 +339,38 @@ window.convertToVisNetwork = (graphData) => {
     const sourceInterface = link.sourceInterface || 'unknown';
     const targetInterface = link.targetInterface || 'unknown';
     
+    // Detect if this is a port channel connection
+    const isPortChannel = sourceInterface.toLowerCase().includes('port-channel') || 
+                         targetInterface.toLowerCase().includes('port-channel');
+    
+    const edgeStyle = isPortChannel ? {
+      width: 4,
+      color: {
+        color: '#6B7280', // Same gray as other links
+        highlight: '#10B981', // Green when selected/highlighted
+        hover: '#9CA3AF'
+      },
+      dashes: false,
+      smooth: link.smooth
+    } : {
+      width: 2,
+      color: {
+        color: '#6B7280',
+        highlight: '#9CA3AF',
+        hover: '#9CA3AF'
+      },
+      smooth: link.smooth
+    };
+
     edges.add({
       id: `edge-${index}`,
       from: sourceId,
       to: targetId,
-      title: `${sourceId} -> ${targetId}\nSource: ${sourceInterface}\nTarget: ${targetInterface}`,
+      title: `${sourceId} -> ${targetId}\nSource: ${sourceInterface}\nTarget: ${targetInterface}${isPortChannel ? '\n🔗 Port Channel' : ''}`,
       sourceInterface: sourceInterface,
       targetInterface: targetInterface,
-      smooth: link.smooth
+      isPortChannel: isPortChannel,
+      ...edgeStyle
     });
   });
 
@@ -422,32 +488,102 @@ window.resetVisLayout = (visNetworkRef) => {
 window.autoArrangeVisLayout = (visNetworkRef) => {
   if (visNetworkRef.current) {
     try {
-      // Enable hierarchical layout
+      // Get all nodes and their device types
+      const allNodes = visNetworkRef.current.body.data.nodes.get();
+      const positions = {};
+      
+      // Categorize nodes by device type
+      const routers = allNodes.filter(node => node.deviceType === 'router');
+      const switches = allNodes.filter(node => node.deviceType === 'switch');
+      const wanProviders = allNodes.filter(node => node.deviceType === 'wan' || node.deviceType === 'wan_provider');
+      const wlcs = allNodes.filter(node => node.deviceType === 'wireless_controller');
+      const firewalls = allNodes.filter(node => node.deviceType === 'firewall');
+      const others = allNodes.filter(node => 
+        !['router', 'switch', 'wan', 'wan_provider', 'wireless_controller', 'firewall'].includes(node.deviceType)
+      );
+      
+      // Define layout parameters
+      const centerX = 0;
+      const spacing = 300;
+      const levelSpacing = 200;
+      
+      // Arrange WAN providers at the top
+      wanProviders.forEach((node, i) => {
+        const offset = (i - (wanProviders.length - 1) / 2) * spacing;
+        positions[node.id] = { x: centerX + offset, y: -levelSpacing * 2 };
+      });
+      
+      // Arrange routers in the upper tier
+      routers.forEach((node, i) => {
+        const offset = (i - (routers.length - 1) / 2) * spacing;
+        positions[node.id] = { x: centerX + offset, y: -levelSpacing };
+      });
+      
+      // Arrange firewalls (if any) between routers and switches
+      firewalls.forEach((node, i) => {
+        const offset = (i - (firewalls.length - 1) / 2) * spacing;
+        positions[node.id] = { x: centerX + offset, y: -levelSpacing * 0.5 };
+      });
+      
+      // Arrange core/distribution switches in the middle tier
+      const coreDist = switches.filter(node => 
+        node.label.includes('bigb1') || node.label.includes('bigb2') || 
+        node.label.includes('core') || node.label.includes('dist')
+      );
+      const accessSwitches = switches.filter(node => 
+        !coreDist.includes(node)
+      );
+      
+      // Core/distribution switches
+      coreDist.forEach((node, i) => {
+        const offset = (i - (coreDist.length - 1) / 2) * spacing;
+        positions[node.id] = { x: centerX + offset, y: 0 };
+      });
+      
+      // Access switches in lower tier
+      accessSwitches.forEach((node, i) => {
+        const offset = (i - (accessSwitches.length - 1) / 2) * spacing;
+        positions[node.id] = { x: centerX + offset, y: levelSpacing };
+      });
+      
+      // Arrange wireless controllers at the bottom
+      wlcs.forEach((node, i) => {
+        const offset = (i - (wlcs.length - 1) / 2) * spacing;
+        positions[node.id] = { x: centerX + offset, y: levelSpacing * 2 };
+      });
+      
+      // Arrange any other devices
+      others.forEach((node, i) => {
+        const offset = (i - (others.length - 1) / 2) * spacing;
+        positions[node.id] = { x: centerX + offset + spacing * 2, y: 0 };
+      });
+      
+      // First disable physics and hierarchical layout
       visNetworkRef.current.setOptions({
         layout: {
           hierarchical: {
-            enabled: true,
-            direction: 'UD',
-            sortMethod: 'directed',
-            nodeSpacing: 200,
-            levelSeparation: 150,
-            shakeTowards: 'roots'
+            enabled: false
           }
         },
         physics: { 
-          enabled: true,
-          hierarchicalRepulsion: {
-            centralGravity: 0.0,
-            springLength: 100,
-            springConstant: 0.01,
-            nodeDistance: 120,
-            damping: 0.09
-          },
-          solver: 'hierarchicalRepulsion'
+          enabled: false
         }
       });
       
-      console.log('Hierarchical layout applied - use Reset Layout to return to free movement');
+      // Move nodes to calculated positions
+      Object.entries(positions).forEach(([nodeId, position]) => {
+        visNetworkRef.current.moveNode(nodeId, position.x, position.y);
+      });
+      
+      // Fit the network to view
+      visNetworkRef.current.fit({
+        animation: {
+          duration: 1000,
+          easingFunction: 'easeInOutQuad'
+        }
+      });
+      
+      console.log('Network arranged in tiers - WAN/Routers/Switches/WLCs from top to bottom');
     } catch (e) {
       console.log('Auto arrange error:', e);
     }

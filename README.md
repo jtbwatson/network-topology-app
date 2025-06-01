@@ -10,10 +10,15 @@ This is a Network Topology Visualization application that dynamically renders ne
 - **Babel Standalone**: For JSX transformation in browser
 - **ES6 Modules**: Modular architecture with separated concerns
 
-**Data Sources**: D2 files in the `data/` directory containing network topology definitions
-- `branch.d2` - Branch office network topology
-- `campus.d2` - Campus network topology  
-- `datacenter.d2` - Data center network topology
+**Data Sources**: D2 files in the `sites/` directory containing network topology definitions
+- Automatically discovers all `.d2` files in sites/ directory
+- Supports hierarchical organization (e.g., `north-america/usa/california/san-francisco.d2`)
+- Extracts metadata from D2 file comments and filenames
+- Examples: `branch.d2`, `campus.d2`, `datacenter.d2`, `big branch.d2`
+
+**Additional Assets**:
+- `assets/icons/` - Professional SVG icons for device types (router, switch, firewall, wifi, cloud)
+- D2 template files (`d2-template-*.d2`) - Standardized templates for programmatic topology generation
 
 **Application Structure**:
 - `index.html` - Main entry point with modular architecture using global functions
@@ -54,6 +59,7 @@ php -S localhost:8000
 - **`useVisNetworkVisualization.js`** - vis.js Network visualization with stable positioning and grid controls
 
 ### Components (`src/components/`)
+- **`NodeListPanel.js`** - Device overview list when no device is selected
 - **`DeviceDetailsPanel.js`** - Layer 2 device information and interface details
 - **`Layer3Panel.js`** - Routing protocols, SVIs, and Layer 3 configuration
 - **`ConnectionDetailsPanel.js`** - Link details and interface configuration comparison
@@ -64,9 +70,13 @@ php -S localhost:8000
 - **Multiple Connection Handling**: Smart edge processing with minimal curves for clarity and clickability
 - **Grid-Based Layout**: Professional diagram positioning with snap-to-grid functionality
 - **Layout Controls**: Reset, hierarchical arrangement, and grid snap features
-- **Device Type Support**: Routers, switches, firewalls, wireless controllers
+- **Device Type Support**: Routers, switches, firewalls, wireless controllers, WAN providers
 - **Interface Management**: Physical ports and SVIs with detailed configuration
 - **Routing Information**: OSPF, BGP, static routes, and VRRP/HSRP status
+- **External Connection Support**: WAN/ISP provider integration with circuit details
+- **Professional SVG Icons**: Custom icon set for consistent device representation
+- **Port Channel Support**: LACP port channels with visual ellipse indicators
+- **Dynamic Site Loading**: Programmatic generation without hardcoded manifests
 
 ## Working with D2 Files
 
@@ -95,11 +105,15 @@ device1.interface1 -> device2.interface2
 - `firewall` - Security appliances
 - `wireless_controller` - Wireless LAN controllers
 - `access_point` - Wireless access points
+- `wan_provider` - External/WAN connection providers (ISP, MPLS, etc.)
 
 **Interface Properties**:
 - Physical interfaces (GigabitEthernet0/0/1, 1/0/24, etc.)
 - SVI interfaces (vlan10, vlan20, etc.)
+- WAN interfaces (WAN1, WAN2, etc.) for external connections
 - Configuration includes VLANs, IP addressing, routing protocol settings
+- Provider circuit information (bandwidth, circuit ID, SLA class)
+- BGP session configuration (eBGP/iBGP, ASN, neighbor details)
 
 ## File Organization
 
@@ -132,8 +146,9 @@ device1.interface1 -> device2.interface2
 ## Common Tasks
 
 **Adding new D2 files**: 
-- Place in `data/` directory 
-- Update site loading logic in `useNetworkData.js`
+- Place in `sites/` directory (or subdirectories for organization)
+- Files are automatically discovered and loaded
+- Add metadata in D2 file comments for better organization
 
 **Modifying visualization**: 
 - Update vis.js Network configuration in `useVisNetworkVisualization.js`
