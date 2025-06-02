@@ -1,0 +1,76 @@
+# sbigb101 - Access Switch 101
+sbigb101: {
+  label: "sbigb101"
+  type: "switch"
+  mgmt_ip: "10.2.1.101"
+  
+  # Layer 3 Access Switch Information
+  ip_routing_enabled: "true"
+  ospf_enabled: "true"
+  ospf_process_id: "1"
+  ospf_areas: "1"
+  ospf_router_id: "10.2.1.101"
+  routing_table_count: "15"
+  dhcp_relay_enabled: "true"
+  
+  # Switch VLANs
+  vlan50: {
+    vlan_id: "50"
+    ip_address: "10.0.50.1"
+    subnet_mask: "255.255.255.0"
+    status: "up"
+    helper_address: "10.1.1.10"
+    ospf_area: "1"
+    ospf_cost: "1"
+  }
+  
+  vlan51: {
+    vlan_id: "51"
+    ip_address: "10.0.51.1"
+    subnet_mask: "255.255.255.0"
+    status: "up"
+    helper_address: "10.1.1.10"
+    ospf_area: "1"
+    ospf_cost: "1"
+  }
+  
+  1/1/49: {
+    description: "sbigb1.1/1/51"
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "10.2.10.2"
+    subnet_mask: "255.255.255.252"
+    ospf_area: "1"
+    ospf_cost: "10"
+    ospf_network_type: "point-to-point"
+  }
+  
+  1/1/50: {
+    description: "sbigb2.1/1/51"
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "10.2.11.2"
+    subnet_mask: "255.255.255.252"
+    ospf_area: "1"
+    ospf_cost: "10"
+    ospf_network_type: "point-to-point"
+  }
+  
+  1/0/1: {
+    description: "Access port for devices"
+    switchport_mode: "access"
+    access_vlan: 50
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+  
+  1/0/2: {
+    description: "Access port for devices"
+    switchport_mode: "access"
+    access_vlan: 51
+    status: "up"
+    bandwidth: "1Gbps"
+  }
+}

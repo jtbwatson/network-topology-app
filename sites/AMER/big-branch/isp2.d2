@@ -1,0 +1,22 @@
+# ISP2 - Verizon WAN Provider
+isp2: {
+  label: "ISP - Verizon"
+  type: "wan"
+  mgmt_ip: "10.2.1.9"
+  
+  # Provider Information
+  provider_name: "Verizon"
+  circuit_id: "VZ-MPLS-1234"
+  bandwidth: "100Mbps"
+  circuit_type: "MPLS"
+  sla_class: "Business"
+  bgp_asn: "64513"
+  
+  WAN1: {
+    description: "Secondary WAN Circuit"
+    status: "up"
+    bandwidth: "50Mbps"
+    ip_address: "10.2.1.9"
+    subnet_mask: "255.255.255.248"
+  }
+}

@@ -44,30 +44,12 @@ window.useNetworkData = () => {
       }
 
       console.log(`✅ Successfully loaded ${Object.keys(apiData.sites).length} sites from API`);
+      console.log(`🗂️ Hierarchy structure:`, apiData.hierarchy);
       
-      // Process API data to match expected frontend format
-      const processedData = {
-        sites: {},
-        hierarchy: {}
+      return {
+        sites: apiData.sites,
+        hierarchy: apiData.hierarchy
       };
-
-      Object.entries(apiData.sites).forEach(([siteKey, siteData]) => {
-        // Add hierarchy info if not present
-        if (!siteData.site_info.hierarchy) {
-          siteData.site_info.hierarchy = getHierarchyFromPath(siteData.file_path);
-        }
-        
-        processedData.sites[siteKey] = siteData;
-        
-        console.log(`📊 Processed site: ${siteKey}`, {
-          name: siteData.site_info.name,
-          location: siteData.site_info.location,
-          devices: siteData.site_info.devices_count,
-          type: siteData.site_info.type || 'site'
-        });
-      });
-
-      return processedData;
       
     } catch (err) {
       console.error("❌ API Error:", err);
