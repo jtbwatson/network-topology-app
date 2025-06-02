@@ -28,35 +28,23 @@ This is a Network Topology Visualization application that dynamically renders ne
 
 ## Development Commands
 
-**Recommended: FastAPI Backend (New)**:
+**Local Development**:
 ```bash
-# Setup and start API server (serves frontend + API)
+# Setup and start (first time)
 npm run setup    # Install Python dependencies
-npm run api      # Start FastAPI server on port 8000
+npm run start    # Start FastAPI server + frontend on port 8000
 
-# Access application at http://localhost:8000/
-```
-
-**Alternative: Static File Serving**:
-```bash
-# Traditional static file serving
-npm run start    # Uses npx serve .
-npm run dev      # Uses python -m http.server 8000
-
-# Alternative manual methods
-python -m http.server 8000
-npx serve .
-php -S localhost:8000
+# Alternative
+npm run api      # Same as npm run start
 ```
 
 **Accessing the application**: 
-- **API Backend**: `http://localhost:8000/` (recommended)
-- **Static Files**: `http://localhost:8000/index.html`
-- **API Documentation**: `http://localhost:8000/docs` (when using API backend)
+- Open `http://localhost:8000` in a browser
+- API documentation available at `http://localhost:8000/docs`
 
 **Architecture Note**: The application uses a pseudo-modular approach where components are loaded as global functions via Babel script tags, allowing for separation of concerns without requiring a build system.
 
-**NEW: FastAPI Backend**: The application now includes an optional FastAPI backend that serves D2 files via REST API, enabling future integration with GNS3, SNMP, and other network data sources. See [API_README.md](API_README.md) for details.
+**FastAPI Backend**: The application includes a FastAPI backend that serves D2 files via REST API, enabling automatic file discovery and future integration with GNS3, SNMP, and other network data sources. See [API_README.md](API_README.md) for details.
 
 ## Key Components
 
@@ -135,7 +123,7 @@ device1.interface1 -> device2.interface2
 - **Entry Point**: `index.html` loads modules as global functions via Babel
 - **No build process**: All files are loaded with `<script type="text/babel">` tags
 - **App Logic**: Main React component is embedded in `index.html`
-- **Mock file system**: API in HTML handles D2 file loading via fetch
+- **FastAPI Backend**: Python backend (`api/main.py`) handles D2 file discovery and serving
 
 ## Adding New Features
 
