@@ -28,11 +28,18 @@ This is a Network Topology Visualization application that dynamically renders ne
 
 ## Development Commands
 
-Since this is a static HTML/JavaScript application without a build system:
-
-**Local Development**:
+**Recommended: FastAPI Backend (New)**:
 ```bash
-# Using npm scripts (recommended)
+# Setup and start API server (serves frontend + API)
+npm run setup    # Install Python dependencies
+npm run api      # Start FastAPI server on port 8000
+
+# Access application at http://localhost:8000/
+```
+
+**Alternative: Static File Serving**:
+```bash
+# Traditional static file serving
 npm run start    # Uses npx serve .
 npm run dev      # Uses python -m http.server 8000
 
@@ -43,9 +50,13 @@ php -S localhost:8000
 ```
 
 **Accessing the application**: 
-- Open `http://localhost:8000/index.html` in a browser
+- **API Backend**: `http://localhost:8000/` (recommended)
+- **Static Files**: `http://localhost:8000/index.html`
+- **API Documentation**: `http://localhost:8000/docs` (when using API backend)
 
 **Architecture Note**: The application uses a pseudo-modular approach where components are loaded as global functions via Babel script tags, allowing for separation of concerns without requiring a build system.
+
+**NEW: FastAPI Backend**: The application now includes an optional FastAPI backend that serves D2 files via REST API, enabling future integration with GNS3, SNMP, and other network data sources. See [API_README.md](API_README.md) for details.
 
 ## Key Components
 
