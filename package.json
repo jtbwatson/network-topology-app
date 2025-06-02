@@ -4,8 +4,7 @@
   "description": "Network Topology Visualization application",
   "main": "index.html",
   "scripts": {
-    "start": "npx serve .",
-    "dev": "python -m http.server 8000",
+    "start": "./start-api.sh",
     "api": "./start-api.sh",
     "api-install": "bash -c 'source $HOME/.local/bin/env && uv venv && source .venv/bin/activate && uv pip install -r requirements.txt'",
     "setup": "npm run api-install && echo '✅ API dependencies installed. Run: npm run api or ./start-api.sh'"

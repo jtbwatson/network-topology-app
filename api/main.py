@@ -8,7 +8,8 @@ import aiofiles
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.openapi.docs import get_swagger_ui_html
 from pathlib import Path
 from typing import Dict, List, Optional
 import re
@@ -149,6 +150,13 @@ async def serve_frontend():
         return HTMLResponse(content=content)
     except FileNotFoundError:
         return HTMLResponse(content="<h1>Frontend not found</h1><p>Run from the project root directory</p>")
+
+
+
+@app.get("/api")
+async def api_documentation():
+    """Redirect to interactive API documentation"""
+    return RedirectResponse(url="/docs")
 
 @app.get("/api/health")
 async def health_check():
