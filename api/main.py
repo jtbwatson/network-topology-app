@@ -117,20 +117,27 @@ async def combine_multi_file_site(site_dir: Path, main_d2_content: str) -> str:
             combined_content.append(line)
         
         # Find and read all individual device files
-        for device_file in site_dir.glob("*.d2"):
-            if device_file.name == "main.d2":
+        # Check both the site directory and a devices/ subdirectory
+        device_dirs = [site_dir, site_dir / "devices"]
+        
+        for device_dir in device_dirs:
+            if not device_dir.exists():
                 continue
                 
-            try:
-                async with aiofiles.open(device_file, mode='r') as f:
-                    device_content = await f.read()
-                
-                device_files_found.append(device_file.name)
-                combined_content.append(f"\n# === {device_file.name} ===")
-                combined_content.append(device_content)
-                
-            except Exception as e:
-                print(f"Warning: Could not read device file {device_file}: {e}")
+            for device_file in device_dir.glob("*.d2"):
+                if device_file.name == "main.d2":
+                    continue
+                    
+                try:
+                    async with aiofiles.open(device_file, mode='r') as f:
+                        device_content = await f.read()
+                    
+                    device_files_found.append(device_file.name)
+                    combined_content.append(f"\n# === {device_file.name} ===")
+                    combined_content.append(device_content)
+                    
+                except Exception as e:
+                    print(f"Warning: Could not read device file {device_file}: {e}")
         
         result = '\n'.join(combined_content)
         print(f"✅ Combined main.d2 with {len(device_files_found)} device files: {device_files_found}")
