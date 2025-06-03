@@ -1,0 +1,28 @@
+# ATT - CSR1000V
+ATT: {
+  label: "ATT"
+  type: "router"
+  model: "CSR1000V"
+  mgmt_ip: "7.7.7.7"
+
+  # Interface Configuration
+  GigabitEthernet1: {
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "172.16.1.2"
+    subnet_mask: "255.255.255.0"
+  }
+  GigabitEthernet2: {
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "12.0.1.1"
+    subnet_mask: "255.255.255.252"
+  }
+
+  # Routing Configuration
+  bgp_enabled: "true"
+  bgp_as: "7018"
+  bgp_neighbors: "172.16.1.1 AS65000"
+}

@@ -1,0 +1,45 @@
+# rbigb2 - CSR1000V
+rbigb2: {
+  label: "rbigb2"
+  type: "router"
+  model: "CSR1000V"
+  mgmt_ip: "10.0.0.2"
+
+  # Interface Configuration
+  GigabitEthernet1: {
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "172.16.2.1"
+    subnet_mask: "255.255.255.0"
+  }
+  GigabitEthernet2: {
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "192.168.2.1"
+    subnet_mask: "255.255.255.0"
+    ospf_area: "0"
+    ospf_cost: "10"
+    ospf_network_type: "point-to-point"
+  }
+  GigabitEthernet3: {
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "10.10.0.1"
+    subnet_mask: "255.255.255.254"
+    ospf_area: "0"
+    ospf_cost: "10"
+    ospf_network_type: "point-to-point"
+  }
+
+  # Routing Configuration
+  bgp_enabled: "true"
+  bgp_as: "65000"
+  bgp_neighbors: "10.10.0.0 AS65000, 172.16.2.2 AS701"
+  ospf_enabled: "true"
+  ospf_process_id: "1"
+  ospf_router_id: "10.0.0.2"
+  ospf_areas: "0"
+}
