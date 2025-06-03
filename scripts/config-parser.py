@@ -34,8 +34,19 @@ class DeviceConfig:
         """Add routing protocol configuration"""
         self.routing_protocols[protocol] = config
 
+def detect_device_os(config_text: str) -> str:
+    """Detect the device operating system from configuration text"""
+    if "Version AOS-CX" in config_text or "!Version AOS-CX" in config_text:
+        return "aruba-cx"
+    elif "version " in config_text and ("IOS XE" in config_text or "Cisco" in config_text):
+        return "cisco-ios"
+    elif "hostname " in config_text and ("interface GigabitEthernet" in config_text or "router ospf" in config_text):
+        return "cisco-ios"  # Fallback for Cisco without explicit version
+    else:
+        return "unknown"
+
 class ConfigParser:
-    """Parses Cisco configuration files"""
+    """Base parser class - detects device type and delegates to appropriate parser"""
     
     def __init__(self, config_dir: str):
         self.config_dir = Path(config_dir)
@@ -50,7 +61,7 @@ class ConfigParser:
         return self.devices
         
     def parse_config_file(self, filepath: Path) -> Optional[DeviceConfig]:
-        """Parse a single configuration file"""
+        """Parse a single configuration file by detecting device type"""
         try:
             with open(filepath, 'r') as f:
                 config_text = f.read()
@@ -58,14 +69,35 @@ class ConfigParser:
             print(f"Error reading {filepath}: {e}")
             return None
             
+        # Detect device OS type
+        device_os = detect_device_os(config_text)
+        print(f"Detected device OS: {device_os} for {filepath.name}")
+        
+        # Use appropriate parser based on device type
+        if device_os == "cisco-ios":
+            parser = CiscoConfigParser()
+            return parser.parse_config(config_text, filepath.name)
+        elif device_os == "aruba-cx":
+            parser = ArubaConfigParser()
+            return parser.parse_config(config_text, filepath.name)
+        else:
+            print(f"Unknown device type for {filepath.name}, skipping...")
+            return None
+
+class CiscoConfigParser:
+    """Parser for Cisco IOS/IOS-XE configuration files"""
+    
+    def parse_config(self, config_text: str, filename: str) -> Optional[DeviceConfig]:
+        """Parse Cisco configuration text"""
         # Extract hostname
         hostname_match = re.search(r'^hostname\s+(\S+)', config_text, re.MULTILINE)
         if not hostname_match:
-            print(f"No hostname found in {filepath}")
+            print(f"No hostname found in {filename}")
             return None
             
         hostname = hostname_match.group(1)
-        device = DeviceConfig(hostname, filepath.name)
+        device = DeviceConfig(hostname, filename)
+        device.device_type = "router"  # Default for Cisco
         
         # Extract device model from license line
         model_match = re.search(r'license udi pid\s+(\S+)', config_text, re.MULTILINE)
@@ -81,7 +113,7 @@ class ConfigParser:
         return device
         
     def _parse_interfaces(self, config_text: str, device: DeviceConfig):
-        """Parse interface configurations"""
+        """Parse Cisco interface configurations"""
         # Find all interface blocks
         interface_pattern = r'^interface\s+(\S+)\s*\n((?:(?!^interface|^router|^!).*\n)*)'
         interfaces = re.findall(interface_pattern, config_text, re.MULTILINE)
@@ -134,7 +166,7 @@ class ConfigParser:
                 device.add_interface(intf_name, config_dict)
                 
     def _parse_routing_protocols(self, config_text: str, device: DeviceConfig):
-        """Parse routing protocol configurations"""
+        """Parse Cisco routing protocol configurations"""
         # Parse BGP
         bgp_match = re.search(r'^router bgp\s+(\d+)\s*\n((?:(?!^router|^interface|^!).*\n)*)', 
                              config_text, re.MULTILINE)
@@ -196,6 +228,156 @@ class ConfigParser:
                     ospf_data['areas'].append(area)
                     
             device.add_routing_protocol('ospf', ospf_data)
+
+class ArubaConfigParser:
+    """Parser for Aruba OS-CX configuration files"""
+    
+    def parse_config(self, config_text: str, filename: str) -> Optional[DeviceConfig]:
+        """Parse Aruba OS-CX configuration text"""
+        # Extract hostname
+        hostname_match = re.search(r'^hostname\s+(\S+)', config_text, re.MULTILINE)
+        if not hostname_match:
+            print(f"No hostname found in {filename}")
+            return None
+            
+        hostname = hostname_match.group(1)
+        device = DeviceConfig(hostname, filename)
+        device.device_type = "switch"  # Default for Aruba switches
+        
+        # Extract device model from version line
+        version_match = re.search(r'!Version AOS-CX (.+)', config_text)
+        if version_match:
+            device.model = f"AOS-CX {version_match.group(1)}"
+            
+        # Parse interfaces
+        self._parse_interfaces(config_text, device)
+        
+        # Parse routing protocols
+        self._parse_routing_protocols(config_text, device)
+        
+        return device
+        
+    def _parse_interfaces(self, config_text: str, device: DeviceConfig):
+        """Parse Aruba interface configurations"""
+        # Find all interface blocks - Aruba uses different indentation
+        interface_pattern = r'^interface\s+(\S+.*?)\n((?:(?:^\s{4}.*|^\s*$)\n)*)'
+        interfaces = re.findall(interface_pattern, config_text, re.MULTILINE)
+        
+        for intf_name, intf_config in interfaces:
+            intf_name = intf_name.strip()
+            config_dict = {
+                'name': intf_name,
+                'status': 'up',  # Default
+                'description': '',
+                'ip_address': '',
+                'subnet_mask': '',
+                'negotiation': '',
+                'other_config': [],
+                'lag_member': False,
+                'lag_id': None
+            }
+            
+            # Parse IP address with CIDR notation
+            ip_match = re.search(r'^\s*ip address\s+(\S+/\d+)', intf_config, re.MULTILINE)
+            if ip_match:
+                ip_cidr = ip_match.group(1)
+                try:
+                    interface_ip = ipaddress.IPv4Interface(ip_cidr)
+                    config_dict['ip_address'] = str(interface_ip.ip)
+                    config_dict['subnet_mask'] = str(interface_ip.network.netmask)
+                except:
+                    # If parsing fails, store as-is
+                    config_dict['ip_address'] = ip_cidr
+                    config_dict['subnet_mask'] = ''
+            
+            # Check for DHCP
+            if 'ip dhcp' in intf_config:
+                config_dict['ip_address'] = 'dhcp'
+                config_dict['subnet_mask'] = ''
+                
+            # Parse LAG membership
+            lag_match = re.search(r'^\s*lag\s+(\d+)', intf_config, re.MULTILINE)
+            if lag_match:
+                config_dict['lag_member'] = True
+                config_dict['lag_id'] = lag_match.group(1)
+                
+            # Parse shutdown status
+            if 'no shutdown' not in intf_config:
+                config_dict['status'] = 'down'
+                
+            # Store other configuration lines
+            for line in intf_config.split('\n'):
+                line = line.strip()
+                if line and not line.startswith('!') and 'ip address' not in line and 'no shutdown' not in line:
+                    config_dict['other_config'].append(line)
+            
+            # Add LAG information for D2 compatibility
+            if intf_name.startswith('lag'):
+                config_dict['port_channel'] = True
+                config_dict['protocol'] = 'LACP'  # Aruba LAG uses LACP
+                
+            # Categorize interface
+            if intf_name.startswith('loopback'):
+                device.add_loopback(intf_name, config_dict)
+            else:
+                device.add_interface(intf_name, config_dict)
+                
+    def _parse_routing_protocols(self, config_text: str, device: DeviceConfig):
+        """Parse Aruba routing protocol configurations"""
+        # Parse OSPF - Aruba format is similar but simpler
+        ospf_match = re.search(r'^router ospf\s+(\d+)\s*\n((?:(?:^\s{4}.*|^\s*$)\n)*)', 
+                              config_text, re.MULTILINE)
+        if ospf_match:
+            process_id = ospf_match.group(1)
+            ospf_config = ospf_match.group(2)
+            
+            ospf_data = {
+                'process_id': process_id,
+                'router_id': '',
+                'networks': [],
+                'areas': []
+            }
+            
+            # Parse router-id
+            router_id_match = re.search(r'^\s*router-id\s+(\S+)', ospf_config, re.MULTILINE)
+            if router_id_match:
+                ospf_data['router_id'] = router_id_match.group(1)
+                
+            # Parse areas
+            area_match = re.search(r'^\s*area\s+(\S+)', ospf_config, re.MULTILINE)
+            if area_match:
+                ospf_data['areas'].append(area_match.group(1))
+                    
+            device.add_routing_protocol('ospf', ospf_data)
+            
+        # Parse interface-level OSPF (Aruba assigns OSPF to interfaces directly)
+        interface_ospf_pattern = r'interface\s+(\S+.*?)\n((?:(?:^\s{4}.*|^\s*$)\n)*)'
+        interface_blocks = re.findall(interface_ospf_pattern, config_text, re.MULTILINE)
+        
+        ospf_interfaces = []
+        for intf_name, intf_config in interface_blocks:
+            ospf_match = re.search(r'ip ospf\s+(\d+)\s+area\s+(\S+)', intf_config)
+            if ospf_match:
+                process_id = ospf_match.group(1)
+                area = ospf_match.group(2)
+                ospf_interfaces.append({
+                    'interface': intf_name.strip(),
+                    'process_id': process_id,
+                    'area': area
+                })
+                
+        if ospf_interfaces:
+            # Update or create OSPF data with interface information
+            if 'ospf' not in device.routing_protocols:
+                device.add_routing_protocol('ospf', {
+                    'process_id': ospf_interfaces[0]['process_id'],
+                    'router_id': '',
+                    'networks': [],
+                    'areas': list(set([intf['area'] for intf in ospf_interfaces])),
+                    'interfaces': ospf_interfaces
+                })
+            else:
+                device.routing_protocols['ospf']['interfaces'] = ospf_interfaces
 
 class D2Generator:
     """Generates D2 files from parsed device configurations"""
@@ -300,6 +482,11 @@ class D2Generator:
                     device_content.append(f'    bandwidth: "1Gbps"')  # Default for GigE interfaces
                     device_content.append(f'    ip_address: "{intf_config["ip_address"]}"')
                     device_content.append(f'    subnet_mask: "{intf_config["subnet_mask"]}"')
+                    
+                    # Add port channel information for LAG interfaces
+                    if intf_config.get('port_channel'):
+                        device_content.append(f'    protocol: "LACP"')
+                        device_content.append(f'    port_channel: "true"')
                     
                     # Add OSPF properties if device has OSPF enabled
                     if 'ospf' in device.routing_protocols:
@@ -464,17 +651,23 @@ class D2Generator:
         
     def _determine_device_type(self, device: DeviceConfig) -> str:
         """Determine device type based on model and configuration"""
+        # Cisco devices
         if device.model in ['CSR1000V', 'ISR4331', 'ISR4321', 'ISR4451']:
             return 'router'
         elif device.model in ['C9300', 'C3850', 'C2960']:
             return 'switch'
+        # Aruba devices
+        elif 'AOS-CX' in device.model:
+            return 'switch'  # Aruba OS-CX devices are typically switches
         elif 'WLC' in device.model or 'wireless' in device.hostname.lower():
             return 'wireless_controller'
         elif 'firewall' in device.hostname.lower() or 'asa' in device.model.lower():
             return 'firewall'
         else:
-            # Default based on configuration
-            if device.routing_protocols:
+            # Use the device_type set by the parser, or default based on configuration
+            if hasattr(device, 'device_type') and device.device_type:
+                return device.device_type
+            elif device.routing_protocols:
                 return 'router'
             else:
                 return 'switch'
@@ -487,23 +680,43 @@ class D2Generator:
 
 def main():
     """Main function to parse configs and generate D2 files"""
-    script_dir = Path(__file__).parent
-    config_dir = script_dir / "device-configs"
-    output_dir = script_dir
+    import argparse
+    import sys
+    
+    parser = argparse.ArgumentParser(description='Parse Cisco configs and generate D2 topology files')
+    parser.add_argument('--config-dir', '-c', required=True, 
+                       help='Directory containing .conf files')
+    parser.add_argument('--output-dir', '-o', required=True,
+                       help='Output directory for D2 files')
+    parser.add_argument('--site-name', '-n', default='Network Topology',
+                       help='Site name for the topology')
+    parser.add_argument('--location', '-l', default='Unknown',
+                       help='Site location')
+    parser.add_argument('--description', '-d', default='Auto-generated from device configurations',
+                       help='Site description')
+    
+    args = parser.parse_args()
+    
+    config_dir = Path(args.config_dir)
+    output_dir = Path(args.output_dir)
     
     if not config_dir.exists():
         print(f"Config directory not found: {config_dir}")
-        return
+        sys.exit(1)
+        
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True, exist_ok=True)
         
     print(f"Parsing configurations from: {config_dir}")
+    print(f"Output directory: {output_dir}")
     
     # Parse configurations
-    parser = ConfigParser(config_dir)
-    devices = parser.parse_all_configs()
+    config_parser = ConfigParser(config_dir)
+    devices = config_parser.parse_all_configs()
     
     if not devices:
         print("No devices found or parsed successfully")
-        return
+        sys.exit(1)
         
     print(f"Parsed {len(devices)} devices:")
     for hostname, device in devices.items():
@@ -513,9 +726,9 @@ def main():
     # Generate D2 files
     generator = D2Generator(devices)
     generator.generate_d2_files(output_dir, {
-        'name': 'GNS3 Lab Network Topology',
-        'location': 'Lab Environment',
-        'description': 'Auto-generated from GNS3 device configurations'
+        'name': args.site_name,
+        'location': args.location,
+        'description': args.description
     })
     
 if __name__ == "__main__":

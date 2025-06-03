@@ -149,7 +149,7 @@ window.getVRRPInterfaces = (deviceId, deviceData, interfacesData) => {
 const abbreviateInterfaceName = (name) => {
   if (!name) return name;
   
-  // Common Cisco interface abbreviations
+  // Common Cisco and Aruba interface abbreviations
   const abbreviations = {
     'GigabitEthernet': 'Gi',
     'TenGigabitEthernet': 'Te',
@@ -159,7 +159,8 @@ const abbreviateInterfaceName = (name) => {
     'Loopback': 'Lo',
     'Vlan': 'Vl',
     'Port-channel': 'Po',
-    'Tunnel': 'Tu'
+    'Tunnel': 'Tu',
+    'lag ': 'LAG'  // Aruba LAG interfaces
   };
   
   // Check each pattern and replace
@@ -176,8 +177,8 @@ const abbreviateInterfaceName = (name) => {
 const getInterfaceModeIndicator = (config) => {
   if (!config) return '';
   
-  // Check if it's a port channel
-  if (config.protocol === 'LACP' || config.members) {
+  // Check if it's a port channel (Cisco Port-channel or Aruba LAG)
+  if (config.protocol === 'LACP' || config.members || config.port_channel === 'true') {
     return 'PC';
   }
   

@@ -7,7 +7,8 @@
     "start": "./scripts/start-api.sh",
     "api": "./scripts/start-api.sh",
     "api-install": "bash -c 'source $HOME/.local/bin/env && uv venv && source .venv/bin/activate && uv pip install -r requirements.txt'",
-    "setup": "npm run api-install && echo '✅ API dependencies installed. Run: npm run api or ./scripts/start-api.sh'"
+    "setup": "npm run api-install && echo '✅ API dependencies installed. Run: npm run api or ./scripts/start-api.sh'",
+    "config-parser": "./scripts/config-parser.sh"
   },
   "keywords": ["network", "topology", "visualization", "d3", "react"],
   "author": "",

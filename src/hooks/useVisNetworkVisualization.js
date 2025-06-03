@@ -339,9 +339,11 @@ window.convertToVisNetwork = (graphData) => {
     const sourceInterface = link.sourceInterface || 'unknown';
     const targetInterface = link.targetInterface || 'unknown';
     
-    // Detect if this is a port channel connection
+    // Detect if this is a port channel connection (Cisco Port-channel or Aruba LAG)
     const isPortChannel = sourceInterface.toLowerCase().includes('port-channel') || 
-                         targetInterface.toLowerCase().includes('port-channel');
+                         targetInterface.toLowerCase().includes('port-channel') ||
+                         sourceInterface.toLowerCase().includes('lag ') || 
+                         targetInterface.toLowerCase().includes('lag ');
     
     const edgeStyle = isPortChannel ? {
       width: 4,

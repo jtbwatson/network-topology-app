@@ -1,0 +1,37 @@
+# sbigb1 - AOS-CX Virtual.10.15.1020
+sbigb1: {
+  label: "sbigb1"
+  type: "switch"
+  model: "AOS-CX Virtual.10.15.1020"
+
+  # Interface Configuration
+  mgmt: {
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "dhcp"
+    subnet_mask: ""
+  }
+  lag 1: {
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "192.168.100.0"
+    subnet_mask: "255.255.255.254"
+    protocol: "LACP"
+    port_channel: "true"
+  }
+  1/1/1: {
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "192.168.1.2"
+    subnet_mask: "255.255.255.0"
+  }
+
+  # Routing Configuration
+  ospf_enabled: "true"
+  ospf_process_id: "1"
+  ospf_router_id: "10.0.1.1"
+  ospf_areas: "0.0.0.0"
+}
