@@ -18,13 +18,14 @@ This is a Network Topology Visualization application that dynamically renders ne
 
 **Additional Assets**:
 - `assets/icons/` - Professional SVG icons for device types (router, switch, firewall, wifi, cloud)
-- D2 template files (`d2-template-*.d2`) - Standardized templates for programmatic topology generation
 
 **Application Structure**:
 - `index.html` - Main entry point with modular architecture using global functions
-- `src/components/` - Reusable UI components
+- `src/components/` - Reusable UI components (exported as global functions)
 - `src/hooks/` - Custom React hooks for data and state management
 - `src/utils/` - Utility functions and parsers
+- `api/` - FastAPI backend for serving D2 files and static assets
+- `sites/` - D2 topology files (automatically discovered)
 
 ## Development Commands
 
@@ -44,7 +45,7 @@ npm run api      # Same as npm run start
 
 **Architecture Note**: The application uses a pseudo-modular approach where components are loaded as global functions via Babel script tags, allowing for separation of concerns without requiring a build system.
 
-**FastAPI Backend**: The application includes a FastAPI backend that serves D2 files via REST API, enabling automatic file discovery and future integration with GNS3, SNMP, and other network data sources. See [API_README.md](API_README.md) for details.
+**FastAPI Backend**: The application includes a FastAPI backend that serves D2 files via REST API, enabling automatic file discovery and future integration with GNS3, SNMP, and other network data sources. API documentation is available at `/docs` when running the server.
 
 ## Key Components
 
@@ -58,6 +59,7 @@ npm run api      # Same as npm run start
 - **`useVisNetworkVisualization.js`** - vis.js Network visualization with stable positioning and grid controls
 
 ### Components (`src/components/`)
+- **`SiteTreeNavigation.js`** - Hierarchical site selection and navigation
 - **`NodeListPanel.js`** - Device overview list when no device is selected
 - **`DeviceDetailsPanel.js`** - Layer 2 device information and interface details
 - **`Layer3Panel.js`** - Routing protocols, SVIs, and Layer 3 configuration
@@ -110,20 +112,28 @@ device1.interface1 -> device2.interface2
 - Physical interfaces (GigabitEthernet0/0/1, 1/0/24, etc.)
 - SVI interfaces (vlan10, vlan20, etc.)
 - WAN interfaces (WAN1, WAN2, etc.) for external connections
+- LAG interfaces (lag 1, lag 2, etc.) for link aggregation
 - Configuration includes VLANs, IP addressing, routing protocol settings
 - Provider circuit information (bandwidth, circuit ID, SLA class)
 - BGP session configuration (eBGP/iBGP, ASN, neighbor details)
+- LACP configuration for port channels and LAG groups
 
 ## File Organization
 
 ### Current Modular Structure
-- **Components**: Separated into individual files in `src/components/`
-- **Hooks**: Custom React hooks in `src/hooks/`
-- **Utilities**: Pure functions and parsers in `src/utils/`
+- **Components**: Separated into individual files in `src/components/` (exported as `window.ComponentName`)
+- **Hooks**: Custom React hooks in `src/hooks/` (exported as `window.hookName`)
+- **Utilities**: Pure functions and parsers in `src/utils/` (exported as `window.functionName`)
 - **Entry Point**: `index.html` loads modules as global functions via Babel
 - **No build process**: All files are loaded with `<script type="text/babel">` tags
 - **App Logic**: Main React component is embedded in `index.html`
 - **FastAPI Backend**: Python backend (`api/main.py`) handles D2 file discovery and serving
+
+### Site Organization
+- **Single files**: `sites/branch.d2`, `sites/big branch.d2`
+- **Multi-file sites**: `sites/gns3-lab/main.d2` + `sites/gns3-lab/devices/*.d2`
+- **Hierarchical**: `sites/region/country/city.d2` (automatic discovery)
+- **Metadata extraction**: From D2 comments and file structure
 
 ## Adding New Features
 
