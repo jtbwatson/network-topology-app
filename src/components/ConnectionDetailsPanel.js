@@ -8,8 +8,20 @@ window.ConnectionDetailsPanel = ({
 }) => {
   if (!selectedConnection) return null;
 
-  const sourceInterfaceConfig = interfacesData.get(selectedConnection.sourceInterfaceKey);
-  const targetInterfaceConfig = interfacesData.get(selectedConnection.targetInterfaceKey);
+  // Try to get interface configs with robust key matching
+  let sourceInterfaceConfig = interfacesData.get(selectedConnection.sourceInterfaceKey);
+  let targetInterfaceConfig = interfacesData.get(selectedConnection.targetInterfaceKey);
+
+  // Fallback: if direct key lookup fails, try alternative key formats
+  if (!sourceInterfaceConfig) {
+    const altSourceKey = `${selectedConnection.source.id}.${selectedConnection.sourceInterface}`;
+    sourceInterfaceConfig = interfacesData.get(altSourceKey);
+  }
+
+  if (!targetInterfaceConfig) {
+    const altTargetKey = `${selectedConnection.target.id}.${selectedConnection.targetInterface}`;
+    targetInterfaceConfig = interfacesData.get(altTargetKey);
+  }
 
   return (
     <div>

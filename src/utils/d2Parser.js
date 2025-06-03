@@ -110,7 +110,7 @@ window.parseD2ToGraph = (d2String) => {
       trimmed.includes(": {") &&
       braceDepth === 2 &&
       currentDeviceId &&
-      (trimmed.includes("/") || trimmed.includes("port") || trimmed.includes("ethernet") || trimmed.toLowerCase().includes("channel"))
+      (trimmed.includes("/") || trimmed.toLowerCase().includes("port") || trimmed.toLowerCase().includes("ethernet") || trimmed.toLowerCase().includes("channel") || trimmed.toLowerCase().includes("gigabit"))
     ) {
       const interfaceId = trimmed.split(":")[0].trim();
       currentInterfaceId = interfaceId;
