@@ -1,0 +1,59 @@
+# slab1 - AOS-CX Virtual.10.15.1020
+slab1: {
+  label: "slab1"
+  type: "switch"
+  role: "core_switch"
+  model: "AOS-CX Virtual.10.15.1020"
+
+  # Interface Configuration
+  mgmt: {
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "dhcp"
+    subnet_mask: ""
+  }
+  lag 1: {
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "192.168.100.0"
+    subnet_mask: "255.255.255.254"
+    protocol: "LACP"
+    port_channel: "true"
+  }
+  1/1/1: {
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "192.168.1.2"
+    subnet_mask: "255.255.255.0"
+  }
+  1/1/3: {
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "192.168.11.2"
+    subnet_mask: "255.255.255.0"
+  }
+  1/1/4: {
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "192.168.13.2"
+    subnet_mask: "255.255.255.0"
+  }
+  1/1/5: {
+    switchport_mode: "routed"
+    status: "up"
+    bandwidth: "1Gbps"
+    ip_address: "192.168.15.2"
+    subnet_mask: "255.255.255.0"
+  }
+
+  # Routing Configuration
+  ospf_enabled: "true"
+  ospf_process_id: "1"
+  ospf_router_id: "10.0.1.1"
+  ospf_areas: "0.0.0.0"
+}

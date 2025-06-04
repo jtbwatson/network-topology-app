@@ -41,23 +41,39 @@ window.getDeviceIcon = (type) => {
   return iconMap[type] || iconMap.unknown;
 };
 
-// Get device color based on type
-window.getDeviceColor = (type) => {
-  const colors = {
-    router: "#0EA5E9",
-    switch: "#22C55E",
-    firewall: "#F97316",
-    wireless_controller: "#8B5CF6",
+// Get device color based on role (with fallback to type)
+window.getDeviceColor = (role, type) => {
+  // Role-based colors (matching the UI colors)
+  const roleColors = {
+    'core_switch': "#F87171",      // Darker light red
+    'access_switch': "#3B82F6",    // Darker blue
+    'router': "#22C55E",           // Darker green
+    'firewall': "#FB923C",         // Orange (unchanged)
+    'wireless_controller': "#A78BFA", // Purple (unchanged)
+    'isp_pe': "#FBBF24",          // Yellow (unchanged)
+  };
+  
+  // Use role color if available
+  if (role && roleColors[role]) {
+    return roleColors[role];
+  }
+  
+  // Fallback to type-based colors for backward compatibility
+  const typeColors = {
+    router: "#4ADE80",
+    switch: "#60A5FA",
+    firewall: "#FB923C",
+    wireless_controller: "#A78BFA",
     access_point: "#14B8A6",
     server: "#16A34A",
-    external: "#EAB308",
-    wan: "#EAB308",
-    wan_provider: "#EAB308",
+    external: "#FBBF24",
+    wan: "#FBBF24",
+    wan_provider: "#FBBF24",
     internet: "#3B82F6",
     mpls: "#6B7280",
     unknown: "#6B7280",
   };
-  return colors[type] || colors.unknown;
+  return typeColors[type] || typeColors.unknown;
 };
 
 // Get device interfaces dynamically

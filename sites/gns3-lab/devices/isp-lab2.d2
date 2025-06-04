@@ -1,28 +1,29 @@
-# ATT - CSR1000V
-ATT: {
-  label: "ATT"
+# isp-lab2 - CSR1000V
+isp-lab2: {
+  label: "isp-lab2"
   type: "router"
+  role: "isp_pe"
   model: "CSR1000V"
-  mgmt_ip: "7.7.7.7"
+  mgmt_ip: "4.4.4.4"
 
   # Interface Configuration
   GigabitEthernet1: {
     switchport_mode: "routed"
     status: "up"
     bandwidth: "1Gbps"
-    ip_address: "172.16.1.2"
+    ip_address: "172.16.2.2"
     subnet_mask: "255.255.255.0"
   }
   GigabitEthernet2: {
     switchport_mode: "routed"
     status: "up"
     bandwidth: "1Gbps"
-    ip_address: "12.0.1.1"
+    ip_address: "4.0.1.1"
     subnet_mask: "255.255.255.252"
   }
 
   # Routing Configuration
   bgp_enabled: "true"
-  bgp_as: "7018"
-  bgp_neighbors: "172.16.1.1 AS65000"
+  bgp_as: "701"
+  bgp_neighbors: "172.16.2.1 AS65000"
 }

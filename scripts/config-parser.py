@@ -16,6 +16,7 @@ class DeviceConfig:
         self.hostname = hostname
         self.filename = filename
         self.device_type = "router"  # Default, can be detected later
+        self.device_role = detect_device_role(hostname)  # Auto-detect role from hostname
         self.model = ""
         self.interfaces = {}
         self.loopbacks = {}
@@ -44,6 +45,40 @@ def detect_device_os(config_text: str) -> str:
         return "cisco-ios"  # Fallback for Cisco without explicit version
     else:
         return "unknown"
+
+def detect_device_role(hostname: str) -> str:
+    """Detect device role based on hostname patterns"""
+    hostname_lower = hostname.lower()
+    
+    # ISP PE devices start with "isp"
+    if hostname_lower.startswith('isp'):
+        return 'isp_pe'
+    
+    # Routers start with 'r'
+    if hostname_lower.startswith('r'):
+        return 'router'
+    
+    # Firewalls start with 'f'
+    if hostname_lower.startswith('f'):
+        return 'firewall'
+    
+    # Wireless controllers start with 'w'
+    if hostname_lower.startswith('w'):
+        return 'wireless_controller'
+    
+    # Core switches: start with 's' and end with only 1 number (slab1, slab2)
+    if hostname_lower.startswith('s') and re.match(r'^s.*\d$', hostname_lower):
+        # Check if it ends with exactly one digit
+        match = re.search(r'\d+$', hostname_lower)
+        if match and len(match.group()) == 1:
+            return 'core_switch'
+    
+    # Access switches: start with 's' and end with 3 numbers (slab011, slab012, slab021)
+    if hostname_lower.startswith('s') and re.match(r'^s.*\d{3}$', hostname_lower):
+        return 'access_switch'
+    
+    # Default to generic device type based on configuration
+    return 'unknown'
 
 class ConfigParser:
     """Base parser class - detects device type and delegates to appropriate parser"""
@@ -455,6 +490,9 @@ class D2Generator:
             # Determine device type
             device_type = self._determine_device_type(device)
             device_content.append(f'  type: "{device_type}"')
+            
+            # Add device role
+            device_content.append(f'  role: "{device.device_role}"')
             
             if device.model:
                 device_content.append(f'  model: "{device.model}"')

@@ -269,7 +269,8 @@ window.convertToVisNetwork = (graphData) => {
   // Convert nodes
   graphData.nodes.forEach(node => {
     const deviceIcon = window.getDeviceIcon(node.type);
-    const deviceColor = window.getDeviceColor(node.type);
+    const deviceRole = node.device?.role || 'unknown';
+    const deviceColor = window.getDeviceColor(deviceRole, node.type);
     
     nodes.add({
       id: node.id,

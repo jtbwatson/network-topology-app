@@ -1,24 +1,33 @@
 # GNS3 Lab Network
 # Location: Lab Environment
 # Description: Auto-generated from device configurations
-# Device Count: 6 devices
+# Device Count: 9 devices
 
 # Device List - Individual device configurations are in separate .d2 files
 devices: {
-  ATT
-  Verizon
-  rbigb1
-  rbigb2
-  sbigb1
-  sbigb2
+  isp-lab1
+  isp-lab2
+  rlab1
+  rlab2
+  slab011
+  slab012
+  slab021
+  slab1
+  slab2
 }
 
 # Connection Topology - All site connections defined here
 # This prevents duplicate connections across device files
 
-rbigb2.GigabitEthernet1 -> Verizon.GigabitEthernet1
-rbigb2.GigabitEthernet2 -> sbigb2.1/1/1
-rbigb2.GigabitEthernet3 -> rbigb1.GigabitEthernet3
-sbigb1.lag 1 -> sbigb2.lag 1
-sbigb1.1/1/1 -> rbigb1.GigabitEthernet2
-rbigb1.GigabitEthernet1 -> ATT.GigabitEthernet1
+slab012.1/1/1 -> slab1.1/1/4
+slab012.1/1/2 -> slab2.1/1/4
+slab1.lag 1 -> slab2.lag 1
+slab1.1/1/1 -> rlab1.GigabitEthernet2
+slab1.1/1/3 -> slab011.1/1/1
+slab1.1/1/5 -> slab021.1/1/1
+slab011.1/1/2 -> slab2.1/1/3
+isp-lab2.GigabitEthernet1 -> rlab2.GigabitEthernet1
+rlab2.GigabitEthernet2 -> slab2.1/1/1
+rlab2.GigabitEthernet3 -> rlab1.GigabitEthernet3
+isp-lab1.GigabitEthernet1 -> rlab1.GigabitEthernet1
+slab021.1/1/2 -> slab2.1/1/5
