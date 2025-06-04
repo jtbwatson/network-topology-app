@@ -10,7 +10,7 @@
     "setup": "npm run api-install && echo '✅ API dependencies installed. Run: npm run api or ./scripts/start-api.sh'",
     "config-parser": "./scripts/config-parser.sh"
   },
-  "keywords": ["network", "topology", "visualization", "d3", "react"],
+  "keywords": ["network", "topology", "visualization", "vis.js", "react"],
   "author": "",
   "license": "ISC"
 }

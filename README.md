@@ -1,20 +1,26 @@
 # Network Topology Visualization App
 
-This is a Network Topology Visualization application that dynamically renders network diagrams from D2 (declarative diagram) files. The application is built as a single-page React application using vanilla HTML/JavaScript with CDN dependencies.
+This is a Network Topology Visualization application that dynamically renders network diagrams from D2 (declarative diagram) files. The application consists of a React frontend (via CDN) and a FastAPI backend.
 
 ## Architecture
 
 **Frontend Framework**: React 18 (loaded via CDN)
-- **vis.js Network**: For stable, grid-based network topology visualization
+- **vis.js Network**: For stable, grid-based network topology visualization  
 - **Tailwind CSS**: For styling (loaded via CDN)
 - **Babel Standalone**: For JSX transformation in browser
-- **ES6 Modules**: Modular architecture with separated concerns
+- **Global Functions Pattern**: Pseudo-modular architecture using `window.ComponentName` exports
 
-**Data Sources**: D2 files in the `sites/` directory containing network topology definitions
-- Automatically discovers all `.d2` files in sites/ directory
-- Supports hierarchical organization (e.g., `north-america/usa/california/san-francisco.d2`)
+**Backend**: FastAPI Python server
+- Serves static frontend files (HTML, CSS, JS)
+- Provides REST API for D2 topology data discovery and serving
+- Automatic site discovery by scanning `sites/` directory recursively
+- Supports both single `.d2` files and multi-file sites with `main.d2`
+
+**Data Sources**: D2 files in the `sites/` directory
+- Automatically discovers all `.d2` files and `main.d2` + device combinations
+- Supports hierarchical organization and multi-file site structures
 - Extracts metadata from D2 file comments and filenames
-- Examples: `branch.d2`, `campus.d2`, `datacenter.d2`, `big branch.d2`
+- Example: `sites/gns3-lab/main.d2` + `sites/gns3-lab/devices/*.d2`
 
 **Additional Assets**:
 - `assets/icons/` - Professional SVG icons for device types (router, switch, firewall, wifi, cloud)
@@ -29,41 +35,47 @@ This is a Network Topology Visualization application that dynamically renders ne
 
 ## Development Commands
 
-**Local Development**:
+**First-time setup:**
 ```bash
-# Setup and start (first time)
-npm run setup    # Install Python dependencies
-npm run start    # Start FastAPI server + frontend on port 8000
+npm run setup    # Installs Python dependencies in virtual environment
+```
 
-# Alternative
+**Start the application:**
+```bash
+npm run start    # Starts FastAPI backend + serves frontend on port 8000
 npm run api      # Same as npm run start
 ```
 
-**Accessing the application**: 
-- Open `http://localhost:8000` in a browser
-- API documentation available at `http://localhost:8000/docs`
+**Config parser (Cisco to D2):**
+```bash
+npm run config-parser    # Parse GNS3 lab configs (uses default paths)
+# Or with custom paths:
+./scripts/config-parser.sh "path/to/configs" "output/dir" "Site Name" "Location"
+```
 
-**Architecture Note**: The application uses a pseudo-modular approach where components are loaded as global functions via Babel script tags, allowing for separation of concerns without requiring a build system.
+**Access the application:**
+- Frontend: http://localhost:8000
+- API docs: http://localhost:8000/docs
 
-**FastAPI Backend**: The application includes a FastAPI backend that serves D2 files via REST API, enabling automatic file discovery and future integration with GNS3, SNMP, and other network data sources. API documentation is available at `/docs` when running the server.
+**Architecture Note**: The application uses a pseudo-modular approach where components are loaded as global functions via Babel script tags. This allows separation of concerns without requiring a build system, but **dependency order matters** - utilities must load before hooks, hooks before components.
 
 ## Key Components
 
 ### Utilities (`src/utils/`)
-- **`d2Parser.js`** - D2 syntax parser extracting devices, interfaces, and connections
-- **`deviceUtils.js`** - Device type detection, icons, colors, and interface management
-- **`layoutUtils.js`** - Layout utility functions (legacy D3 utilities)
+- **`d2Parser.js`** - Parses D2 syntax into devices, interfaces, and connections
+- **`deviceUtils.js`** - Device type detection, icons, colors, and interface utilities
+- **`layoutUtils.js`** - Layout controls for vis.js Network (reset, arrange, grid snap)
 
 ### Custom Hooks (`src/hooks/`)
-- **`useNetworkData.js`** - Manages D2 file loading, parsing, and error handling
-- **`useVisNetworkVisualization.js`** - vis.js Network visualization with stable positioning and grid controls
+- **`useNetworkData.js`** - Fetches and processes D2 topology data from FastAPI backend
+- **`useVisNetworkVisualization.js`** - vis.js Network setup with stable positioning and layout controls
 
 ### Components (`src/components/`)
-- **`SiteTreeNavigation.js`** - Hierarchical site selection and navigation
+- **`SiteTreeNavigation.js`** - Site selection with hierarchical organization
 - **`NodeListPanel.js`** - Device overview list when no device is selected
-- **`DeviceDetailsPanel.js`** - Layer 2 device information and interface details
-- **`Layer3Panel.js`** - Routing protocols, SVIs, and Layer 3 configuration
-- **`ConnectionDetailsPanel.js`** - Link details and interface configuration comparison
+- **`DeviceDetailsPanel.js`** - Layer 2 device information and interfaces
+- **`Layer3Panel.js`** - Routing protocols, SVIs, Layer 3 configuration
+- **`ConnectionDetailsPanel.js`** - Link details between devices
 - **`Modals.js`** - Access points modal and routing table modal
 
 ### Core Features
@@ -72,12 +84,13 @@ npm run api      # Same as npm run start
 - **Grid-Based Layout**: Professional diagram positioning with snap-to-grid functionality
 - **Layout Controls**: Reset, hierarchical arrangement, and grid snap features
 - **Device Type Support**: Routers, switches, firewalls, wireless controllers, WAN providers
-- **Interface Management**: Physical ports and SVIs with detailed configuration
+- **Interface Management**: Physical ports, SVIs, and LAG interfaces with detailed configuration
 - **Routing Information**: OSPF, BGP, static routes, and VRRP/HSRP status
 - **External Connection Support**: WAN/ISP provider integration with circuit details
 - **Professional SVG Icons**: Custom icon set for consistent device representation
-- **Port Channel Support**: LACP port channels with visual ellipse indicators
-- **Dynamic Site Loading**: Programmatic generation without hardcoded manifests
+- **LAG Support**: Link Aggregation Groups with visual indicators and LACP configuration
+- **FastAPI Backend**: Automatic site discovery and REST API for topology data
+- **Config Parser**: Cisco configuration to D2 conversion for GNS3 lab integration
 
 ## Working with D2 Files
 
@@ -85,14 +98,22 @@ D2 files use a hierarchical syntax:
 ```d2
 device_name: {
   label: "Display Name"
-  type: "router|switch|firewall|wireless_controller"
+  type: "router|switch|firewall|wireless_controller|wan_provider"
   mgmt_ip: "192.168.1.1"
   
   interface_name: {
     description: "Link description"
-    ip_address: "10.1.1.1"
-    subnet_mask: "255.255.255.0"
+    ip_address: "10.1.1.1/24"
     status: "up|down"
+    vlan: "100"
+  }
+  
+  # LAG interfaces supported
+  lag_1: {
+    description: "Link Aggregation Group"
+    ip_address: "192.168.100.0/31"
+    protocol: "LACP"
+    status: "up"
   }
 }
 
@@ -109,10 +130,11 @@ device1.interface1 -> device2.interface2
 - `wan_provider` - External/WAN connection providers (ISP, MPLS, etc.)
 
 **Interface Properties**:
-- Physical interfaces (GigabitEthernet0/0/1, 1/0/24, etc.)
+- Physical interfaces (ethernet, gigabit, port patterns)
+- Channel groups and port channels
+- LAG (Link Aggregation) interfaces - Added support for "lag" keyword detection
 - SVI interfaces (vlan10, vlan20, etc.)
 - WAN interfaces (WAN1, WAN2, etc.) for external connections
-- LAG interfaces (lag 1, lag 2, etc.) for link aggregation
 - Configuration includes VLANs, IP addressing, routing protocol settings
 - Provider circuit information (bandwidth, circuit ID, SLA class)
 - BGP session configuration (eBGP/iBGP, ASN, neighbor details)
@@ -120,14 +142,16 @@ device1.interface1 -> device2.interface2
 
 ## File Organization
 
-### Current Modular Structure
-- **Components**: Separated into individual files in `src/components/` (exported as `window.ComponentName`)
-- **Hooks**: Custom React hooks in `src/hooks/` (exported as `window.hookName`)
-- **Utilities**: Pure functions and parsers in `src/utils/` (exported as `window.functionName`)
-- **Entry Point**: `index.html` loads modules as global functions via Babel
-- **No build process**: All files are loaded with `<script type="text/babel">` tags
-- **App Logic**: Main React component is embedded in `index.html`
-- **FastAPI Backend**: Python backend (`api/main.py`) handles D2 file discovery and serving
+### Frontend Architecture
+- **No build system** - Uses `<script type="text/babel">` tags for JSX transformation
+- **Global function pattern** - Components exported as `window.ComponentName = ...`
+- **Dependency order matters** - Utilities → Hooks → Components → Main App
+- **Module loading via index.html** - All script tags must be added to index.html
+
+### Backend Architecture
+- **FastAPI** serves static files and provides REST API for D2 topology data
+- **Automatic site discovery** - Scans `sites/` directory for `.d2` files recursively
+- **Multi-file site support** - Sites can use `main.d2` + individual device files in `devices/` subdirectory
 
 ### Site Organization
 - **Single files**: `sites/branch.d2`, `sites/big branch.d2`
@@ -148,9 +172,9 @@ device1.interface1 -> device2.interface2
 3. Add UI rendering in `DeviceDetailsPanel.js` or `ConnectionDetailsPanel.js`
 
 ### New Components
-1. Create component file in `src/components/` with global function export (`window.ComponentName = ...`)
-2. Add script tag to `index.html` to load the component
-3. Reference component as `<window.ComponentName>` in JSX or add to appropriate UI panel
+1. Create in `src/components/` with `window.ComponentName = ...` export
+2. Add `<script>` tag to `index.html` (order matters)
+3. Reference as `<window.ComponentName>` in JSX
 
 ## Common Tasks
 
@@ -175,9 +199,11 @@ device1.interface1 -> device2.interface2
 
 ## Important Notes
 
-**Module Loading**: The application uses a pseudo-modular approach where components are loaded as global functions via Babel script tags. This allows for separation of concerns without requiring a build system.
-
-**Development Workflow**: When adding new files, always update `index.html` to include the script tag, and ensure dependencies are loaded in the correct order (utils → hooks → components → main app).
+- **Module loading order:** Utilities must load before hooks, hooks before components
+- **Global exports:** All modules use `window.functionName = ...` pattern for cross-file access
+- **No TypeScript/build system:** Pure JavaScript with Babel transformation in browser
+- **vis.js Network:** Provides stable, professional network visualization (not D3 force simulation)
+- **FastAPI backend required:** Frontend depends on `/api/sites` endpoint for topology data
 
 ## Visualization Technology
 
